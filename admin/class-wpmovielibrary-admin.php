@@ -57,8 +57,6 @@ if ( ! class_exists( 'WPMovieLibrary_Admin' ) ) :
 		 */
 		public function init() {
 
-			//error_reporting( E_ALL );
-
 			$this->modules = array(
 				'WPML_Dashboard'   => WPML_Dashboard::get_instance(),
 				'WPML_Settings'    => WPML_Settings::get_instance(),
@@ -110,6 +108,8 @@ if ( ! class_exists( 'WPMovieLibrary_Admin' ) ) :
 			add_action( 'admin_notices', array( $this, 'missing_archive_page' ) );
 
 			add_action( 'in_admin_footer', array( $this, 'legal_mentions' ) );
+
+			add_action( 'dashboard_glance_items', array( $this, 'dashboard_glance_items' ), 10, 1 );
 		}
 
 		/**
@@ -200,6 +200,23 @@ if ( ! class_exists( 'WPMovieLibrary_Admin' ) ) :
 
 			<p id="footer-center" style="text-align:center;margin-bottom:-22px;"><?php _e( 'WPMovieLibrary uses the <a href="http://docs.themoviedb.apiary.io/">TMDb API</a> but is not endorsed or certified by <a href="http://=www.themoviedb.org/">TMDb</a>.', WPML_SLUG ); ?></p>
 <?php
+		}
+
+		/**
+		 * Add a new item to the Right Now Dashboard Widget
+		 *
+		 * @since    1.0.1
+		 * 
+		 * @param    array    Additional items
+		 * 
+		 * @return   array    Additional items
+		 */
+		public function dashboard_glance_items( $items = array() ) {
+
+			$movies = wp_count_posts( 'movie' );
+			$items[] = sprintf( '<a class="movie-count" href="%s">%s</a>', admin_url( '/edit.php?post_type=movie' ), sprintf( _n( '%d movie', '%d movies', $movies->publish, WPML_SLUG ), $movies->publish ) );
+
+			return $items;
 		}
 
 		/**
@@ -384,7 +401,7 @@ if ( ! class_exists( 'WPMovieLibrary_Admin' ) ) :
 				$capability = 'manage_options',
 				$menu_slug = 'wpmovielibrary',
 				$function = null,
-				$icon_url = ( WPML_Utils::is_modern_wp() ? 'dashicons-format-video' : WPML_URL . '/assets/img/icon-movie.png' ),
+				$icon_url = ( WPML_Utils::is_modern_wp() ? 'dashicons-format-video' : WPML_URL . '/assets/img/legacy/icon-movie.png' ),
 				$position = 6
 			);
 

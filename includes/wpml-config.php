@@ -42,7 +42,7 @@ $wpml_settings = array(
 			// API internal mode
 			'internal_api' => array(
 				'title' => __( 'Use internal API Key', WPML_SLUG ),
-				'description' => __( 'If you enable this, WPML will send all queries to the API through a relay server at http://tmdb.caercam.org/; The main purpose of this is to avoid you the need to register a personnal account on TMDb and request a personnal API key to use the plugin. Note that the relay server provides no warrantly and is most indicated for testing the plugin or a minimal usage of it; if you are planning to use WPMovieLibrary extensively, you should consider getting your own API key at <a href="https://www.themoviedb.org/">TheMovieDB</a>. <a href="http://tmdb.caercam.org/">Learn more about the internal API key</a>.', WPML_SLUG ),
+				'description' => __( 'If you enable this, WPML will send all queries to the API through a relay server at http://tmdb.caercam.org/; The main purpose of this is to avoid you the need to register a personal account on TMDb and request a personal API key to use the plugin. Note that the relay server provides no warranty and is most indicated for testing the plugin or a minimal usage of it; if you are planning to use WPMovieLibrary extensively, you should consider getting your own API key at <a href="https://www.themoviedb.org/">TheMovieDB</a>. <a href="http://tmdb.caercam.org/">Learn more about the internal API key</a>.', WPML_SLUG ),
 				'type'=> 'toggle',
 				'default' => 1
 			),
@@ -53,8 +53,31 @@ $wpml_settings = array(
 				'description' => __( 'Default language to use when fetching informations from TMDb. Default is english. You can always change this manually when add a new movie.', WPML_SLUG ),
 				'type' => 'select',
 				'values' => array(
-					'en' => __( 'English', WPML_SLUG ),
-					'fr' => __( 'French', WPML_SLUG )
+					"bg" => "български език",
+					"cs" => "Český",
+					"da" => "Dansk",
+					"de" => "Deutsch",
+					"el" => "ελληνικά",
+					"en" => "English",
+					"es" => "Español",
+					"fi" => "Suomi",
+					"fr" => "Français",
+					"he" => "עִבְרִית",
+					"hu" => "Magyar",
+					"it" => "Italiano",
+					"ko" => "한국어/조선말",
+					"nb" => "Bokmål",
+					"nl" => "Nederlands",
+					"no" => "Norsk",
+					"pl" => "Polski",
+					"pt" => "Português",
+					"ru" => "Pусский",
+					"sk" => "Slovenčina",
+					"sv" => "Svenska",
+					"th" => "ภาษาไทย",
+					"tr" => "Türkçe",
+					"uk" => "Український",
+					"zh" => "中国"
 				),
 				'default' => 'en'
 			),
