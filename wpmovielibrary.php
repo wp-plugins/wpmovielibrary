@@ -33,7 +33,7 @@ if ( ! defined( 'WPINC' ) ) {
 }
 
 define( 'WPML_NAME',                   'WPMovieLibrary' );
-define( 'WPML_VERSION',                '1.0.1' );
+define( 'WPML_VERSION',                '1.0.2' );
 define( 'WPML_SLUG',                   'wpml' );
 define( 'WPML_URL',                    plugins_url( basename( __DIR__ ) ) );
 define( 'WPML_PATH',                   plugin_dir_path( __FILE__ ) );
