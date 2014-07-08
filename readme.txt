@@ -1,6 +1,6 @@
 === WPMovieLibrary ===
 Contributors: askelon
-Donate link: 
+Donate link: http://wpmovielibrary.com/contribute#donate
 Tags: movie, movies, movie database, movie library, movie collection, cinema, movie genre, actor
 Requires at least: 3.6
 Tested up to: 3.9.1
