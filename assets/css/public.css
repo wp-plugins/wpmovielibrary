@@ -16,6 +16,15 @@
 	display: none;
 }
 
+.hentry.wpml_page .page-numbers {
+	text-align: center;
+}
+
+.hentry.wpml_page .page-numbers li {
+	display: inline-block;
+	margin: 0px 0.5em;
+}
+
 /** Movie Post TMDb
  ***************************************************/
 
@@ -39,6 +48,11 @@
 	background: #eee;
 	border-radius: 0.25em;
 	padding: 0.25em 1em;
+}
+
+.wpml_movie_media .wpml_movie_detail_item,
+.wpml_movie_status .wpml_movie_detail_item {
+	padding: 0.5em 1em 0.6em 1em;
 }
 
 .wpml_movie_media.dvd .wpml_movie_detail_item {
@@ -101,11 +115,18 @@
 	background-repeat: no-repeat;
 	background-size: 24px 24px;
 	border-radius: 0.35em;
+	display: inline-block;
 	height: 32px;
+	margin: 0 2px;
+	max-width: 32px;
 	min-width: 32px;
 	opacity: 0.75;
 	padding: 0.2em;
 	vertical-align: middle;
+}
+
+.wpml_movie_rating.wpml_detail_icon {
+	max-width: 94px;
 }
 
 .wpml_movie_media.wpml_detail_icon.dvd {
@@ -155,6 +176,18 @@
 .wpml_movie_rating.wpml_detail_icon .movie_rating_display {
 	margin-top: 8px;
 	margin-left: 8px;
+}
+
+/** Shortcodes **/
+
+.wpml_shortcode_span.wpml_shortcode_span_title {
+	display: block;
+	font-weight: bold;
+}
+
+.wpml_shortcode_span.wpml_shortcode_span_value {
+	display: block;
+	margin-left: 0.5em;
 }
 
 /** Movie Rating **/

@@ -15,9 +15,9 @@
  *
  * @wordpress-plugin
  * Plugin Name: WPMovieLibrary
- * Plugin URI:  http://www.caercam.org/wpmovielibrary
+ * Plugin URI:  http://wpmovielibrary.com
  * Description: A WordPress Plugin to manage a personnal library of movies.
- * Version:     1.0.2
+ * Version:     1.1.0
  * Author:      Charlie MERLAND
  * Author URI:  http://www.caercam.org/
  * Text Domain: wpml
@@ -33,7 +33,7 @@ if ( ! defined( 'WPINC' ) ) {
 }
 
 define( 'WPML_NAME',                   'WPMovieLibrary' );
-define( 'WPML_VERSION',                '1.0.2' );
+define( 'WPML_VERSION',                '1.1.0' );
 define( 'WPML_SLUG',                   'wpml' );
 define( 'WPML_URL',                    plugins_url( basename( __DIR__ ) ) );
 define( 'WPML_PATH',                   plugin_dir_path( __FILE__ ) );
@@ -41,9 +41,10 @@ define( 'WPML_REQUIRED_PHP_VERSION',   '5.3' );
 define( 'WPML_REQUIRED_WP_VERSION',    '3.6' );
 define( 'WPML_SETTINGS_SLUG',          'wpml_settings' );
 define( 'WPML_SETTINGS_REVISION_NAME', 'settings_revision' );
-define( 'WPML_SETTINGS_REVISION',      10 );
-define( 'WPML_DEFAULT_POSTER_URL',     plugins_url( basename( __DIR__ ) ) . '/assets/img/no_poster.png' );
-define( 'WPML_DEFAULT_POSTER_PATH',    WPML_PATH . '/assets/img/no_poster.png' );
+define( 'WPML_SETTINGS_REVISION',      12 );
+define( 'WPML_DEFAULT_POSTER_URL',     plugins_url( basename( __DIR__ ) ) . '/assets/img/no_poster{size}.jpg' );
+define( 'WPML_DEFAULT_POSTER_PATH',    WPML_PATH . '/assets/img/no_poster{size}.jpg' );
+define( 'WPML_MAX_TAXONOMY_LIST',      50 );
 
 
 
@@ -122,6 +123,7 @@ if ( wpml_requirements_met() ) {
 	require_once( WPML_PATH . 'public/genres/class-genres-widget.php' );
 	require_once( WPML_PATH . 'public/actors/class-actors-widget.php' );
 	require_once( WPML_PATH . 'public/statistics/class-statistics-widget.php' );
+	require_once( WPML_PATH . 'public/shortcodes/class-shortcodes.php' );
 
 	/*
 	 * Register hooks that are fired when the plugin is activated or deactivated.

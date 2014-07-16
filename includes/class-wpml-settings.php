@@ -175,6 +175,8 @@ if ( ! class_exists( 'WPML_Settings' ) ) :
 		 */
 		protected static function validate_settings( $settings, $defaults = array() ) {
 
+			require_once( WPML_PATH . 'includes/wpml-config.php' );
+
 			$defaults = ( ! empty( $defaults ) ? $defaults : self::get_default_settings() );
 			$_settings = array();
 
@@ -242,6 +244,8 @@ if ( ! class_exists( 'WPML_Settings' ) ) :
 				if ( isset( $settings[ $slug ] ) ) {
 					if ( in_array( $slug, array( 'default_movie_meta', 'default_movie_details' ) ) ) {
 						$allowed = array_keys( call_user_func( __CLASS__ . '::get_supported_' . str_replace( 'default_', '', $slug ) ) );
+						if ( ! is_array( $default ) )
+							$default = array( $default );
 						$_settings[ $slug ] = array_intersect( $setting, $allowed );
 					}
 					else {
@@ -432,6 +436,20 @@ if ( ! class_exists( 'WPML_Settings' ) ) :
 		}
 
 		/**
+		 * Return all available shortcodes
+		 *
+		 * @since    1.1.0
+		 *
+		 * @return   array    Available shortcodes
+		 */
+		public static function get_available_shortcodes() {
+
+			global $wpml_shortcodes;
+
+			return $wpml_shortcodes;
+		}
+
+		/**
 		 * Return all supported Movie Details fields
 		 *
 		 * @since    1.0.0
@@ -441,6 +459,9 @@ if ( ! class_exists( 'WPML_Settings' ) ) :
 		public static function get_supported_movie_details( $type = null ) {
 
 			global $wpml_movie_details;
+
+			if ( is_null( $wpml_movie_details ) )
+				require( WPML_PATH . 'includes/wpml-config.php' );
 
 			if ( ! is_null( $type ) && isset( $wpml_movie_details[ $type ] ) )
 				return $wpml_movie_meta[ $type ];
@@ -463,12 +484,29 @@ if ( ! class_exists( 'WPML_Settings' ) ) :
 
 			global $wpml_movie_meta;
 
+			if ( is_null( $wpml_movie_meta ) )
+				require( WPML_PATH . 'includes/wpml-config.php' );
+
 			if ( is_null( $type ) && false === $merge )
 				return $wpml_movie_meta;
 			else if ( ! is_null( $type ) && ! $merge && isset( $wpml_movie_meta[ $type ] ) )
 				return $wpml_movie_meta[ $type ]['data'];
 			else
 				return array_merge( $wpml_movie_meta['meta']['data'], $wpml_movie_meta['crew']['data'] );
+		}
+
+		/**
+		 * Return all supported Shortcodes aliases
+		 *
+		 * @since    1.1.0
+		 *
+		 * @return   array    WPML Supported Shortcodes aliases.
+		 */
+		public static function get_supported_movie_meta_aliases() {
+
+			global $wpml_movie_meta_aliases;
+
+			return $wpml_movie_meta_aliases;
 		}
 
 		/**
