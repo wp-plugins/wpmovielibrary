@@ -207,6 +207,22 @@ $wpml_settings = array(
 					'movie_status'
 				)
 			),
+
+			// Release date formatting
+			'date_format' => array(
+				'title' => __( 'Release date format', WPML_SLUG ),
+				'description' => __( 'Apply a custom date format to movies\' release dates. Leave empty to use the default API format. Check the <a href="http://codex.wordpress.org/Formatting_Date_and_Time">documentation on date and time formatting</a>.', WPML_SLUG ),
+				'type' => 'input',
+				'default' => 'j F Y'
+			),
+
+			// Release date formatting
+			'time_format' => array(
+				'title' => __( 'Runtime format', WPML_SLUG ),
+				'description' => __( 'Apply a custom time format to movies\' runtimes. Leave empty to use the default API format.', WPML_SLUG ),
+				'type' => 'input',
+				'default' => 'G \h i \m\i\n'
+			),
 		),
 	),
 
@@ -660,4 +676,292 @@ $wpml_movie_meta = array(
 			)
 		)
 	)
+);
+
+$wpml_movie_meta_aliases = array(
+
+	'country'    => 'production_countries',
+	'production' => 'production_companies',
+	'lang'       => 'spoken_languages',
+	'language'   => 'spoken_languages',
+	'languages'  => 'spoken_languages',
+	'actors'     => 'cast',
+	'resume'     => 'overview',
+	'musician'   => 'composer'
+);
+
+$wpml_shortcodes = array(
+
+	'movies' => array(
+		'atts' => array(
+			'collection' => array(
+				'default' => null,
+				'values'  => null,
+				'filter'  => 'esc_attr'
+			),
+			'genre' => array(
+				'default' => null,
+				'values'  => null,
+				'filter'  => 'esc_attr'
+			),
+			'actor' => array(
+				'default' => null,
+				'values'  => null,
+				'filter'  => 'esc_attr'
+			),
+			'order' => array(
+				'default' => 'desc',
+				'values'  => array( 'asc', 'desc' ),
+				'filter'  => 'esc_attr'
+			),
+			'orderby' => array(
+				'default' => 'date',
+				'values'  => array( 'date', 'title', 'rating' ),
+				'filter'  => 'esc_attr'
+			),
+			'count' => array(
+				'default' => 4,
+				'values'  => null,
+				'filter'  => 'intval'
+			),
+			'poster' => array(
+				'default' => 'medium',
+				'values'  => array( 'none', 'thumb', 'thumbnail', 'medium', 'large', 'full' ),
+				'filter'  => 'esc_attr'
+			),
+			'meta' => array(
+				'default' => null,
+				'values'  => array( 'director', 'runtime', 'release_date', 'genres', 'actors', 'overview', 'title', 'original_title', 'production', 'country', 'language', 'producer', 'photography', 'composer', 'author', 'writer' ),
+				'filter'  => null
+			),
+			'details' => array(
+				'default' => null,
+				'values'  => array( 'media', 'status', 'rating' ),
+				'filter'  => null
+			)
+		),
+		'content'  => null,
+		'callback' => 'movies_shortcode',
+		'aliases'  => null
+	),
+
+	'movie' => array(
+		'atts'     => array(
+			'id' => array(
+				'default' => null,
+				'values'  => null,
+				'filter'  => 'esc_attr'
+			),
+			'title' => array(
+				'default' => null,
+				'values'  => null,
+				'filter'  => 'esc_attr'
+			),
+			'poster' => array(
+				'default' => 'medium',
+				'values'  => array( 'none', 'thumb', 'thumbnail', 'medium', 'large', 'full' ),
+				'filter'  => 'esc_attr'
+			),
+			'meta' => array(
+				'default' => array( 'director', 'runtime', 'release_date', 'genres', 'actors', 'overview' ),
+				'values'  => array( 'director', 'runtime', 'release_date', 'genres', 'actors', 'overview', 'title', 'original_title', 'production', 'country', 'language', 'producer', 'photography', 'composer', 'author', 'writer' ),
+				'filter'  => null
+			),
+			'details' => array(
+				'default' => array( 'media', 'status', 'rating' ),
+				'values'  => array( 'media', 'status', 'rating' ),
+				'filter'  => null
+			)
+		),
+		'content'  => null,
+		'callback' => 'movie_shortcode',
+		'aliases'  => null
+	),
+
+	'movie_meta' => array(
+		'atts'     => array(
+			'id' => array(
+				'default' => null,
+				'values'  => null,
+				'filter'  => 'esc_attr'
+			),
+			'title' => array(
+				'default' => null,
+				'values'  => null,
+				'filter'  => 'esc_attr'
+			),
+			'key' => array(
+				'default' => null,
+				'values'  => array( 'director', 'runtime', 'release_date', 'genres', 'actors', 'overview', 'title', 'original_title', 'production', 'country', 'language', 'producer', 'photography', 'composer', 'author', 'writer' ),
+				'filter'  => 'esc_attr'
+			),
+			'label' => array(
+				'default' => true,
+				'values'  => 'boolean',
+				'filter'  => 'esc_attr'
+			)
+		),
+		'content'  => null,
+		'callback' => 'movie_meta_shortcode',
+		'aliases' => array(
+			'movie_director',
+			'movie_runtime',
+			'movie_release_date',
+			'movie_overview',
+			'movie_title',
+			'movie_original_title',
+			'movie_production',
+			'movie_country',
+			'movie_language',
+			'movie_producer',
+			'movie_photography',
+			'movie_composer',
+			'movie_author',
+			'movie_writer'
+		)
+	),
+
+	'movie_actors' => array(
+		'atts'     => array(
+			'id' => array(
+				'default' => null,
+				'values'  => null,
+				'filter'  => 'esc_attr'
+			),
+			'title' => array(
+				'default' => null,
+				'values'  => null,
+				'filter'  => 'esc_attr'
+			),
+			'count' => array(
+				'default' => null,
+				'values'  => null,
+				'filter'  => 'intval'
+			),
+			'label' => array(
+				'default' => true,
+				'values'  => 'boolean',
+				'filter'  => 'esc_attr'
+			)
+		),
+		'content'  => null,
+		'callback' => 'movie_actors_shortcode',
+		'aliases'  => array( 'movie_cast', 'movie_casting' )
+	),
+
+	'movie_genres' => array(
+		'atts'     => array(
+			'id' => array(
+				'default' => null,
+				'values'  => null,
+				'filter'  => 'esc_attr'
+			),
+			'title' => array(
+				'default' => null,
+				'values'  => null,
+				'filter'  => 'esc_attr'
+			),
+			'count' => array(
+				'default' => null,
+				'values'  => null,
+				'filter'  => 'intval'
+			),
+			'label' => array(
+				'default' => true,
+				'values'  => 'boolean',
+				'filter'  => 'esc_attr'
+			)
+		),
+		'content'  => null,
+		'callback' => 'movie_genres_shortcode',
+		'aliases'  => null
+	),
+
+	'movie_poster' => array(
+		'atts'     => array(
+			'id' => array(
+				'default' => null,
+				'values'  => null,
+				'filter'  => 'esc_attr'
+			),
+			'title' => array(
+				'default' => null,
+				'values'  => null,
+				'filter'  => 'esc_attr'
+			),
+			'size' => array(
+				'default' => 'medium',
+				'values'  => array( 'none', 'thumb', 'thumbnail', 'medium', 'large', 'full' ),
+				'filter'  => 'esc_attr'
+			),
+		),
+		'content'  => null,
+		'callback' => 'movie_poster_shortcode',
+		'aliases'  => null
+	),
+
+	'movie_images' => array(
+		'atts'     => array(
+			'id' => array(
+				'default' => null,
+				'values'  => null,
+				'filter'  => 'esc_attr'
+			),
+			'title' => array(
+				'default' => null,
+				'values'  => null,
+				'filter'  => 'esc_attr'
+			),
+			'size' => array(
+				'default' => 'thumbnail',
+				'values'  => array( 'none', 'thumb', 'thumbnail', 'medium', 'large', 'full' ),
+				'filter'  => 'esc_attr'
+			),
+			'count' => array(
+				'default' => null,
+				'values'  => null,
+				'filter'  => 'intval'
+			),
+			'label' => array(
+				'default' => true,
+				'values'  => 'boolean',
+				'filter'  => 'esc_attr'
+			)
+		),
+		'content'  => null,
+		'callback' => 'movie_images_shortcode',
+		'aliases'  => array( 'movie_pictures', 'movie_photos' )
+	),
+
+	'movie_detail' => array(
+		'atts'     => array(
+			'id' => array(
+				'default' => null,
+				'values'  => null,
+				'filter'  => 'esc_attr'
+			),
+			'title' => array(
+				'default' => null,
+				'values'  => null,
+				'filter'  => 'esc_attr'
+			),
+			'key' => array(
+				'default' => null,
+				'values'  => array( 'media', 'status', 'rating' ),
+				'filter'  => 'esc_attr'
+			),
+			'raw' => array(
+				'default' => true,
+				'values'  => 'boolean',
+				'filter'  => 'esc_attr'
+			),
+		),
+		'content'  => null,
+		'callback' => 'movie_detail_shortcode',
+		'aliases' => array(
+			'movie_media',
+			'movie_status',
+			'movie_rating'
+		)
+	),
 );

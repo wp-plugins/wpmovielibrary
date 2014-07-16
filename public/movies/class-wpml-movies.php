@@ -190,35 +190,16 @@ if ( ! class_exists( 'WPML_Movies' ) ) :
 			if ( empty( $fields ) )
 				return null;
 
+			$post_id = get_the_ID();
+
 			if ( is_string( $fields ) )
 				$fields = array( $fields );
 
 			$html = '<div class="wpml_movie_detail">';
 
 			foreach ( $fields as $field ) {
-
-				switch ( $field ) {
-					case 'movie_media':
-					case 'movie_status':
-						$meta = call_user_func_array( "WPML_Utils::get_{$field}", array( get_the_ID() ) );
-						if ( '' != $meta ) {
-							if ( 1 ==  WPML_Settings::wpml__details_as_icons() ) {
-								$html .= '<div class="wpml_' . $field . ' ' . $meta . ' wpml_detail_icon"></div>';
-							}
-							else {
-								$default_fields = call_user_func( "WPML_Settings::get_available_{$field}" );
-								$html .= '<div class="wpml_' . $field . ' ' . $meta . ' wpml_detail_label"><span class="wpml_movie_detail_item">' . __( $default_fields[ $meta ], WPML_SLUG ) . '</span></div>';
-							}
-						}
-						break;
-					case 'movie_rating':
-						$movie_rating = WPML_Utils::get_movie_rating( get_the_ID() );
-						$html .= sprintf( '<div class="wpml_movie_rating wpml_detail_icon"><div class="movie_rating_display stars_%s"></div></div>', ( '' == $movie_rating ? '0_0' : str_replace( '.', '_', $movie_rating ) ) );
-						break;
-					default:
-						
-						break;
-				}
+				$detail = call_user_func( "WPML_Utils::get_{$field}", $post_id );
+				$html .= apply_filters( "wpml_format_{$field}", $detail );
 			}
 
 			$html .= '</div>';
@@ -253,40 +234,17 @@ if ( ! class_exists( 'WPML_Movies' ) ) :
 
 			$html = '<dl class="wpml_movie">';
 
-			foreach ( $fields as $field ) {
+			foreach ( $fields as $key => $field ) {
 
-				switch ( $field ) {
-					case 'genres':
-						$genres = WPML_Settings::taxonomies__enable_genre() ? get_the_term_list( get_the_ID(), 'genre', '', ', ', '' ) : $tmdb_data[ $field ];
-						$genres = ( '' != $genres ? $genres : sprintf( '<em>%s</em>', '&ndash;' ) );
-						$html .= sprintf( $default_format, $field, $default_fields[ $field ]['title'], $field, $genres );
-						break;
-					case 'cast':
-						$actors = WPML_Settings::taxonomies__enable_actor() ? get_the_term_list( get_the_ID(), 'actor', '', ', ', '' ) : $tmdb_data[ $field ];
-						$actors = ( '' != $actors ? $actors : sprintf( '<em>%s</em>', '&ndash;' ) );
-						$html .= sprintf( $default_format, $field, __( 'Staring', WPML_SLUG ), $field, $actors );
-						break;
-					case 'release_date':
-						$release_date = WPML_Utils::filter_release_date( $tmdb_data[ $field ] );
-						$release_date = ( '' != $release_date ? $release_date : sprintf( '<em>%s</em>', '&ndash;' ) );
-						$html .= sprintf( $default_format, $field, __( $default_fields[ $field ]['title'], WPML_SLUG ), $field, $release_date );
-						break;
-					case 'runtime':
-						$runtime = WPML_Utils::filter_runtime( $tmdb_data[ $field ] );
-						$runtime = ( '' != $runtime ? $runtime : sprintf( '<em>%s</em>', '&ndash;' ) );
-						$html .= sprintf( $default_format, $field, __( $default_fields[ $field ]['title'], WPML_SLUG ), $field, $runtime );
-						break;
-					case 'director':
-						$term = WPML_Settings::taxonomies__enable_collection() ? get_term_by( 'name', $tmdb_data[ $field ], 'collection' ) : $tmdb_data[ $field ];
-						$collection = ( $term && ! is_wp_error( $link = get_term_link( $term, 'collection' ) ) ) ? '<a href="' . $link . '">' . $tmdb_data[ $field ] . '</a>' : $tmdb_data[ $field ];
-						$collection = ( '' != $collection ? $collection : sprintf( '<em>%s</em>', '&ndash;' ) );
-						$html .= sprintf( $default_format, $field, __( 'Directed by', WPML_SLUG ), $field, $collection );
-						break;
-					default:
-						if ( in_array( $field, $fields ) && isset( $tmdb_data[ $field ] ) && '' != $tmdb_data[ $field ] )
-							$html .= sprintf( $default_format, $field, __( $default_fields[ $field ]['title'], WPML_SLUG ), $field, $tmdb_data[ $field ] );
-						break;
-				}
+				// Filter empty field
+				$_field = apply_filters( "wpml_format_movie_field", $tmdb_data[ $field ] );
+
+				// Custom filter if available
+				if ( has_filter( "wpml_format_movie_{$field}" ) )
+					$_field = apply_filters( "wpml_format_movie_{$field}", $_field );
+
+				$fields[ $key ] = $_field;
+				$html .= sprintf( $default_format, $field, __( $default_fields[ $field ]['title'], WPML_SLUG ), $field, $_field );
 			}
 
 			$html .= '</dl>';

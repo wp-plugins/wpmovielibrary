@@ -42,18 +42,37 @@ if ( ! class_exists( 'WPML_Utils' ) ) :
 			add_filter( 'wpml_filter_meta_data', __CLASS__ . '::filter_meta_data', 10, 1 );
 			add_filter( 'wpml_filter_crew_data', __CLASS__ . '::filter_crew_data', 10, 1 );
 			add_filter( 'wpml_filter_cast_data', __CLASS__ . '::filter_cast_data', 10, 1 );
+			add_filter( 'wpml_filter_movie_meta_aliases', __CLASS__ . '::filter_movie_meta_aliases', 10, 1 );
+
+			add_filter( 'wpml_format_movie_genres', __CLASS__ . '::format_movie_genres', 10, 2 );
+			add_filter( 'wpml_format_movie_actors', __CLASS__ . '::format_movie_actors', 10, 2 );
+			add_filter( 'wpml_format_movie_cast', __CLASS__ . '::format_movie_cast', 10, 2 );
+			add_filter( 'wpml_format_movie_release_date', __CLASS__ . '::format_movie_release_date', 10, 2 );
+			add_filter( 'wpml_format_movie_runtime', __CLASS__ . '::format_movie_runtime', 10, 2 );
+			add_filter( 'wpml_format_movie_director', __CLASS__ . '::format_movie_director', 10, 2 );
+			add_filter( 'wpml_format_movie_field', __CLASS__ . '::format_movie_field', 10, 2 );
+
+			add_filter( 'wpml_format_movie_media', __CLASS__ . '::format_movie_media', 10, 2 );
+			add_filter( 'wpml_format_movie_status', __CLASS__ . '::format_movie_status', 10, 2 );
+			add_filter( 'wpml_format_movie_rating', __CLASS__ . '::format_movie_rating', 10, 2 );
+
 			add_filter( 'wpml_filter_filter_runtime', __CLASS__ . '::filter_runtime', 10, 1 );
 			add_filter( 'wpml_filter_filter_release_date', __CLASS__ . '::filter_release_date', 10, 2 );
 			add_filter( 'wpml_validate_meta_data', __CLASS__ . '::validate_meta_data', 10, 1 );
+			add_filter( 'wpml_filter_shortcode_atts', __CLASS__ . '::filter_shortcode_atts', 10, 2 );
+			add_filter( 'wpml_is_boolean', __CLASS__ . '::is_boolean', 10, 1 );
 
 			add_filter( 'wpml_stringify_array', __CLASS__ . '::stringify_array', 10, 3 );
 			add_filter( 'wpml_filter_empty_array', __CLASS__ . '::filter_empty_array', 10, 1 );
 			add_filter( 'wpml_filter_undimension_array', __CLASS__ . '::filter_undimension_array', 10, 1 );
 
+			add_filter( 'post_thumbnail_html', __CLASS__ . '::filter_default_thumbnail', 10, 5 );
+
 			add_filter( 'get_the_terms', __CLASS__ . '::get_the_terms', 10, 3 );
 			add_filter( 'wp_get_object_terms', __CLASS__ . '::get_ordered_object_terms', 10, 4 );
 
 			add_action( 'template_redirect', __CLASS__ . '::filter_404' );
+			add_filter( 'post_type_archive_title', __CLASS__ . '::filter_post_type_archive_title', 10, 2 );
 		}
 
 		/**
@@ -480,15 +499,20 @@ if ( ! class_exists( 'WPML_Utils' ) ) :
 		 * @since    1.0.0
 		 * 
 		 * @param    string    $runtime Movie runtime
+		 * @param    string    $time_format Optional time format to apply
 		 * 
 		 * @return   string    Filtered runtime
 		 */
-		public static function filter_runtime( $runtime ) {
+		public static function filter_runtime( $runtime, $time_format = null ) {
 
-			if ( is_null( $runtime ) && '' != $runtime )
+			if ( is_null( $runtime ) || '' == $runtime )
 				return $runtime;
 
-			$time = date_i18n( get_option( 'time_format' ), mktime( 0, $runtime ) );
+			$time_format = WPML_Settings::wpml__time_format();
+			if ( '' == $time_format )
+				$time_format = 'H \h i \m\i\n';
+
+			$time = date_i18n( $time_format, mktime( 0, $runtime ) );
 			if ( false !== stripos( $time, 'am' ) || false !== stripos( $time, 'pm' ) )
 				$time = date_i18n( 'g:i', mktime( 0, $runtime ) );
 
@@ -502,14 +526,24 @@ if ( ! class_exists( 'WPML_Utils' ) ) :
 		 * @since    1.0.0
 		 * 
 		 * @param    string    $release_date Movie release date
+		 * @param    string    $date_format Optional date format to apply
 		 * 
 		 * @return   string    Filtered release date
 		 */
 		public static function filter_release_date( $release_date, $date_format = null ) {
-			if ( is_null( $date_format ) )
-				$date_format = get_option( 'date_format' );
 
-			return ( ! is_null( $release_date ) && '' != $release_date ? date_i18n( $date_format, strtotime( $release_date ) ) : $release_date );
+			if ( is_null( $release_date ) || '' == $release_date )
+				return $release_date;
+
+			if ( is_null( $date_format ) )
+				$date_format = WPML_Settings::wpml__date_format();
+
+			if ( '' == $date_format )
+				$date_format = 'F Y';
+
+			$date = date_i18n( $date_format, strtotime( $release_date ) );
+
+			return $date;
 		}
 
 		/**
@@ -607,6 +641,273 @@ if ( ! class_exists( 'WPML_Utils' ) ) :
 		}
 
 		/**
+		 * Filter a Movie's Metadata slug to handle aliases.
+		 * 
+		 * @since    1.1.0
+		 * 
+		 * @param    string    $slug Metadata slug
+		 * 
+		 * @return   string    Filtered slug
+		 */
+		public static function filter_movie_meta_aliases( $slug ) {
+
+			$aliases = WPML_Settings::get_supported_movie_meta_aliases();
+			$_slug = str_replace( 'movie_', '', $slug );
+
+			if ( isset( $aliases[ $_slug ] ) )
+				$slug = $aliases[ $_slug ];
+
+			return $slug;
+		}
+
+		/**
+		 * Format a Movie's genres for display
+		 * 
+		 * Match each genre against the genre taxonomy to detect missing
+		 * terms. If term genre exists, provide a link, raw text value
+		 * if no matching term could be found.
+		 * 
+		 * @since    1.1.0
+		 * 
+		 * @param    string    $data field value
+		 * 
+		 * @return   string    Formatted output
+		 */
+		public static function format_movie_genres( $data ) {
+
+			$output = self::format_movie_terms_list( $data, 'genre' );
+
+			return $output;
+		}
+
+		/**
+		 * Format a Movie's casting for display
+		 * This is an alias for self::format_movie_cast()
+		 * 
+		 * @since    1.1.0
+		 * 
+		 * @param    string    $data field value
+		 * @param    int       $post_id Movie's post ID if needed (required for shortcodes)
+		 * 
+		 * @return   string    Formatted output
+		 */
+		public static function format_movie_actors( $data ) {
+
+			return self::format_movie_cast( $data );
+		}
+
+		/**
+		 * Format a Movie's casting for display
+		 * 
+		 * Match each actor against the actor taxonomy to detect missing
+		 * terms. If term actor exists, provide a link, raw text value
+		 * if no matching term could be found.
+		 * 
+		 * @since    1.1.0
+		 * 
+		 * @param    string    $data field value
+		 * 
+		 * @return   string    Formatted output
+		 */
+		public static function format_movie_cast( $data ) {
+
+			$output = self::format_movie_terms_list( $data,  'actor' );
+
+			return $output;
+		}
+
+		/**
+		 * Format a Movie's release date for display
+		 * 
+		 * @since    1.1.0
+		 * 
+		 * @param    string    $data field value
+		 * 
+		 * @return   string    Formatted output
+		 */
+		public static function format_movie_release_date( $data ) {
+
+			$output = WPML_Utils::filter_release_date( $data );
+			$output = ( '' != $output ? $output : '<em>&ndash;</em>' );
+
+			return $output;
+		}
+
+		/**
+		 * Format a Movie's runtime for display
+		 * 
+		 * @since    1.1.0
+		 * 
+		 * @param    string    $data field value
+		 * 
+		 * @return   string    Formatted output
+		 */
+		public static function format_movie_runtime( $data ) {
+
+			$output = WPML_Utils::filter_runtime( $data );
+			$output = ( '' != $output ? $output : '<em>&ndash;</em>' );
+
+			return $output;
+		}
+
+		/**
+		 * Format a Movie's director for display
+		 * 
+		 * @since    1.1.0
+		 * 
+		 * @param    string    $data field value
+		 * @param    int       $post_id Movie's post ID if needed (required for shortcodes)
+		 * 
+		 * @return   string    Formatted output
+		 */
+		public static function format_movie_director( $data ) {
+
+			$output = self::format_movie_terms_list( $data, 'collection' );
+
+			return $output;
+		}
+
+		/**
+		 * Format a Movie's misc field for display
+		 * 
+		 * @since    1.1.0
+		 * 
+		 * @param    string    $data field value
+		 * 
+		 * @return   string    Formatted output
+		 */
+		public static function format_movie_field( $data ) {
+
+			if ( '' == $data )
+				$data = '&mdash;';
+
+			return $data;
+		}
+
+		/**
+		 * Format a Movie's media. If format is HTML, will return a
+		 * HTML formatted string; will return the value without change
+		 * if raw is asked.
+		 * 
+		 * @since    1.1.0
+		 * 
+		 * @param    string    $data rating value
+		 * 
+		 * @return   string    Formatted output
+		 */
+		public static function format_movie_media( $data, $format = 'html' ) {
+
+			$format = ( 'raw' == $format ? 'raw' : 'html' );
+
+			if ( '' == $data )
+				return $data;
+
+			if ( WPML_Settings::wpml__details_as_icons() ) {
+				$data = '<div class="wpml_movie_media ' . $data . ' wpml_detail_icon"></div>';
+			}
+			else if ( 'html' == $format ) {
+				$default_fields = WPML_Settings::get_available_movie_media();
+				$data = '<div class="wpml_movie_media ' . $data . ' wpml_detail_label"><span class="wpml_movie_detail_item">' . __( $default_fields[ $data ], WPML_SLUG ) . '</span></div>';
+			}
+
+			return $data;
+		}
+
+		/**
+		 * Format a Movie's status. If format is HTML, will return a
+		 * HTML formatted string; will return the value without change
+		 * if raw is asked.
+		 * 
+		 * @since    1.1.0
+		 * 
+		 * @param    string    $data rating value
+		 * 
+		 * @return   string    Formatted output
+		 */
+		public static function format_movie_status( $data, $format = 'html' ) {
+
+			$format = ( 'raw' == $format ? 'raw' : 'html' );
+
+			if ( '' == $data )
+				return $data;
+
+			if ( WPML_Settings::wpml__details_as_icons() ) {
+				$data = '<div class="wpml_movie_status ' . $data . ' wpml_detail_icon"></div>';
+			}
+			else if ( 'html' == $format ) {
+				$default_fields = WPML_Settings::get_available_movie_status();
+				$data = '<div class="wpml_movie_status ' . $data . ' wpml_detail_label"><span class="wpml_movie_detail_item">' . __( $default_fields[ $data ], WPML_SLUG ) . '</span></div>';
+			}
+
+			return $data;
+		}
+
+		/**
+		 * Format a Movie's rating. If format is HTML, will return a
+		 * HTML formatted string; will return the value without change
+		 * if raw is asked.
+		 * 
+		 * @since    1.1.0
+		 * 
+		 * @param    string    $data rating value
+		 * 
+		 * @return   string    Formatted output
+		 */
+		public static function format_movie_rating( $data, $format = 'html' ) {
+
+			$format = ( 'raw' == $format ? 'raw' : 'html' );
+
+			if ( '' == $data )
+				return $data;
+
+			if ( 'html' == $format )
+				$data = sprintf( '<div class="wpml_movie_rating wpml_detail_icon"><div class="movie_rating_display stars_%s"></div></div>', ( '' == $data ? '0_0' : str_replace( '.', '_', $data ) ) );
+
+			return $data;
+		}
+
+		/**
+		 * Format a Movie's misc actors/genres list depending on
+		 * existing terms.
+		 * 
+		 * This is used to provide links for actors and genres lists
+		 * by using the metadata lists instead of taxonomies. But since
+		 * actors and genres can be added to the metadata and not terms,
+		 * we rely on metadata to show a correct list.
+		 * 
+		 * @since    1.1.0
+		 * 
+		 * @param    string    $data field value
+		 * @param    string    $taxonomy taxonomy we're dealing with
+		 * 
+		 * @return   string    Formatted output
+		 */
+		private static function format_movie_terms_list( $data, $taxonomy ) {
+
+			$has_taxonomy = call_user_func( "WPML_Settings::taxonomies__enable_$taxonomy" );
+			$_data = explode( ',', $data );
+
+			foreach ( $_data as $key => $term ) {
+				
+				$term = trim( $term );
+				$_term = ( $has_taxonomy ? get_term_by( 'name', $term, $taxonomy ) : $term );
+
+				if ( ! $_term )
+					$_term = $term;
+
+				if ( is_object( $_term ) && '' != $_term->name ) {
+					$link = get_term_link( $_term, $taxonomy );
+					$_term = ( is_wp_error( $link ) ? $_term->name : sprintf( '<a href="%s">%s</a>', $link, $_term->name ) );
+				}
+				$_data[ $key ] = $_term;
+			}
+
+			$_data = ( ! empty( $_data ) ? implode( ', ', $_data ) : '<em>&ndash;</em>' );
+
+			return $_data;
+		}
+
+		/**
 		 * Filter the Movie Metadata submitted when saving a post to
 		 * avoid storing unexpected data to the database.
 		 * 
@@ -658,6 +959,115 @@ if ( ! class_exists( 'WPML_Utils' ) ) :
 			);
 
 			return $_data;
+		}
+
+		/**
+		 * Filter an array of Shortcode attributes.
+		 * 
+		 * Shortcodes have limited attributes and possibly limited values
+		 * for some attributes. This method matches each submitted attr
+		 * to its limited values if available, and apply a filter to the
+		 * value before returning the array.
+		 * 
+		 * @since    1.1.0
+		 * 
+		 * @param    string    $shortcode Shortcode's ID
+		 * @param    array     $atts Attributes to filter
+		 * 
+		 * @return   array    Filtered Attributes
+		 */
+		public static function filter_shortcode_atts( $shortcode, $atts = array() ) {
+
+			if ( ! is_array( $atts ) || empty( $atts ) )
+				return $atts;
+
+			$defaults = WPML_Settings::get_available_shortcodes();
+			$defaults = $defaults[ $shortcode ][ 'atts' ];
+
+			$attributes = array();
+
+			// Loop through the Shortcode's attributes
+			foreach ( $defaults as $slug => $default ) {
+
+				if ( isset( $atts[ $slug ] ) ) {
+
+					$attr = $atts[ $slug ];
+
+					// Attribute is not null
+					if ( is_null( $attr ) ) {
+						$attributes[ $slug ] = $default[ 'default' ];
+					}
+					else if ( ! is_null( $attr ) ) {
+
+						$value = $attr;
+
+						// Attribute has limited values
+						if ( ! is_null( $default[ 'values' ] ) ) {
+
+							// Value should be boolean
+							if ( 'boolean' == $default[ 'values' ] && in_array( strtolower( $attr ), array( 'true', 'false', 'yes', 'no' ) ) ) {
+								$value = apply_filters( 'wpml_is_boolean', $attr );
+							}
+							// Value is array
+							else if ( is_array( $default[ 'values' ] ) ) {
+								// multiple values
+								if ( false !== strpos( $attr, '|' ) ) {
+									$value = str_replace( 'actors', 'cast', $attr );
+									$value = explode( '|', $value );
+									foreach ( $value as $i => $v )
+										if ( ! in_array( $v, $default[ 'values' ] ) )
+											unset( $value[ $i ] );
+
+									array_unique( $value );
+								}
+								// single value
+								else if ( in_array( strtolower( $attr ), $default[ 'values' ] ) )
+									$value = $attr;
+							}
+						}
+
+						// Attribute has a valid filter
+						if ( is_string( $value ) && function_exists( $default[ 'filter' ] ) && is_callable( $default[ 'filter' ] ) )
+							$value = call_user_func( $default[ 'filter' ], $value );
+
+						$attributes[ $slug ] = $value;
+					}
+				}
+				else
+					$attributes[ $slug ] = $default[ 'default' ];
+			}
+
+			return $attributes;
+		}
+
+		/**
+		 * Filter a string value to determine a suitable boolean value.
+		 * 
+		 * This is mostly used for Shortcodes where boolean-like values
+		 * can be used.
+		 * 
+		 * @since    1.1.0
+		 * 
+		 * @param    string    Value to filter
+		 * 
+		 * @return   boolean   Filtered value
+		 */
+		public static function is_boolean( $value ) {
+
+			$value = strtolower( $value );
+
+			$true = array( 'true', true, 'yes', '1', 1 );
+			$false = array( 'false', false, 'no', '0', 0 );
+
+			foreach ( $true as $t )
+				if ( $value === $t )
+					return true;
+
+			foreach ( $false as $f )
+				if ( $value === $f )
+					return false;
+
+			return false;
 		}
 
 		/**
@@ -737,6 +1147,50 @@ if ( ! class_exists( 'WPML_Utils' ) ) :
 			}
 
 			return $_array;
+		}
+
+		/**
+		 * Filter the post thumbnail HTML to return the plugin's default
+		 * poster.
+		 *
+		 * @since 1.1.0
+		 *
+		 * @param    string    $html The post thumbnail HTML.
+		 * @param    string    $post_id The post ID.
+		 * @param    string    $post_thumbnail_id The post thumbnail ID.
+		 * @param    string    $size The post thumbnail size.
+		 * @param    string    $attr Query string of attributes.
+		 * 
+		 * @return   string    Default poster HTML markup
+		 */
+		public static function filter_default_thumbnail( $html, $post_id, $post_thumbnail_id, $size, $attr ) {
+
+			if ( '' != $html )
+				return $html;
+
+			// Filter available sizes
+			switch ( $size ) {
+				case 'post-thumbnail':
+					$size = '-large';
+					break;
+				case 'thumb':
+				case 'thumbnail':
+				case 'medium':
+				case 'large':
+					$size = '-' . $size;
+					break;
+				case 'full':
+					$size = '';
+					break;
+				default:
+					$size = '-large';
+					break;
+			}
+
+			$url = str_replace( '{size}', $size, WPML_DEFAULT_POSTER_URL );
+			$html = '<img class="attachment-post-thumbnail wp-post-image" src="' . $url . '" alt="" />';
+
+			return $html;
 		}
 
 		/**
@@ -1184,7 +1638,17 @@ if ( ! class_exists( 'WPML_Utils' ) ) :
 				return false;
 			}
 
-			$terms = get_terms( $term_slug, array() );
+			$wp_query->query_vars['wpml_archive_page'] = 1;
+			$wp_query->query_vars['wpml_archive_title'] = __( ucwords( $term_slug . 's' ), WPML_SLUG );
+
+			$args = 'hide_empty=true&number=50';
+			$paged = $wp_query->get( 'paged' );
+
+			if ( $paged )
+				$args .= '&offset=' . ( 50 * ( $paged - 1 ) );
+
+			$terms = get_terms( $term_slug, $args );
+			$total = wp_count_terms( $term_slug, 'hide_empty=true' );
 			$content = '';
 
 			if ( is_wp_error( $terms ) )
@@ -1200,7 +1664,15 @@ if ( ! class_exists( 'WPML_Utils' ) ) :
 					);
 
 			if ( is_array( $content ) )
-				$content = implode( "\n", $content );
+				$content = '<ul class="wpml_archives wpml_' . $term_slug . '_archives">' . implode( "\n", $content ) . '</ul>';
+
+			$args = array(
+				'type'    => 'list',
+				'total'   => ceil( ( $total - 1 ) / 50 ),
+				'current' => max( 1, $paged ),
+				'format'  => home_url( $slugs[ $term_slug ] . '/page/%#%/' ),
+			);
+			$content .= self::paginate_links( $args );
 
 			$post->post_content = $content;
 
@@ -1210,6 +1682,102 @@ if ( ! class_exists( 'WPML_Utils' ) ) :
 
 			// Make sure HTTP status is good
 			status_header( '200' );
+		}
+
+		/**
+		 * Filter page titles to replace custom archive pages titles
+		 * with the correct term title.
+		 * 
+		 * @since    1.1.0
+		 * 
+		 * @param    string    $name Current page title
+		 * @param    string    $args Current page post_type
+		 * 
+		 * @return   string    Updated page title.
+		*/
+		public static function filter_post_type_archive_title( $name, $post_type ) {
+
+			global $wp_query;
+
+			if ( 'movie' != $post_type )
+				return $name;
+
+			if ( 1 == $wp_query->get( 'wpml_archive_page' ) && '' != $wp_query->get( 'wpml_archive_title' ) )
+				$name = $wp_query->get( 'wpml_archive_title' );
+
+			return $name;
+		}
+
+		/**
+		 * Retrieve paginated link for archive post pages.
+		 * 
+		 * This is a partial rewrite of WordPress paginate_links() function
+		 * that doesn't work on the plugin's built-in archive pages.
+		 * 
+		 * @since    1.1.0
+		 * 
+		 * @param    array    $args Optional. Override defaults.
+		 * 
+		 * @return   string   String of page links or array of page links.
+		*/
+		private static function paginate_links( $args = '' ) {
+
+			$defaults = array(
+				'base'      => '%_%',
+				'format'    => '/page/%#%/',
+				'total'     => 1,
+				'current'   => 0,
+				'prev_text' => __( '&laquo; Previous' ),
+				'next_text' => __( 'Next &raquo;' ),
+				'end_size'  => 1,
+				'mid_size'  => 2,
+			);
+
+			$args = wp_parse_args( $args, $defaults );
+			extract( $args, EXTR_SKIP );
+
+			// Who knows what else people pass in $args
+			$total = (int) $total;
+			if ( $total < 2 )
+				return;
+			$current  = (int) $current;
+			$end_size = 0  < (int) $end_size ? (int) $end_size : 1; // Out of bounds?  Make it the default.
+			$mid_size = 0 <= (int) $mid_size ? (int) $mid_size : 2;
+			$r = '';
+			$page_links = array();
+			$n = 0;
+			$dots = false;
+
+			if ( $current && 1 < $current ) :
+				$link = str_replace( '%_%', $format, $base );
+				$link = str_replace( '%#%', $current - 1, $link );
+				$page_links[] = '<a class="prev page-numbers" href="' . esc_url( $link ) . '">' . $prev_text . '</a>';
+			endif;
+			for ( $n = 1; $n <= $total; $n++ ) :
+				if ( $n == $current ) :
+					$page_links[] = "<span class='page-numbers current'>" . number_format_i18n( $n ) . "</span>";
+					$dots = true;
+				else :
+					if ( $n <= $end_size || ( $current && $n >= $current - $mid_size && $n <= $current + $mid_size ) || $n > $total - $end_size ) :
+						$link = str_replace( '%_%', $format, $base );
+						$link = str_replace( '%#%', $n, $link );
+						$page_links[] = "<a class='page-numbers' href='" . esc_url( $link ) . "'>" . number_format_i18n( $n ) . "</a>";
+						$dots = true;
+					elseif ( $dots ) :
+						$page_links[] = '<span class="page-numbers dots">' . __( '&hellip;' ) . '</span>';
+						$dots = false;
+					endif;
+				endif;
+			endfor;
+			if ( $current && ( $current < $total || -1 == $total ) ) :
+				$link = str_replace( '%_%', $format, $base );
+				$link = str_replace( '%#%', $current + 1, $link );
+				$page_links[] = '<a class="next page-numbers" href="' . esc_url( $link ) . '">' . $next_text . '</a>';
+			endif;
+
+			$r = '<ul class="page-numbers"><li>' . join( '</li><li>', $page_links ) . '</li></ul>';
+
+			return $r;
 		}
 
 		/**
