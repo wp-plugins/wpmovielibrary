@@ -8,7 +8,7 @@
  * WPML uses TMDb to gather movies' informations.
  *
  * @package   WPMovieLibrary
- * @author    Charlie MERLAND <charlie.merland@gmail.com>
+ * @author    Charlie MERLAND <charlie@caercam.org>
  * @license   GPL-3.0
  * @link      http://www.caercam.org/
  * @copyright 2014 CaerCam.org
@@ -17,14 +17,14 @@
  * Plugin Name: WPMovieLibrary
  * Plugin URI:  http://wpmovielibrary.com
  * Description: A WordPress Plugin to manage a personnal library of movies.
- * Version:     1.1.2
+ * Version:     1.2
  * Author:      Charlie MERLAND
  * Author URI:  http://www.caercam.org/
  * Text Domain: wpml
  * License:     GPL-3.0
  * License URI: http://www.gnu.org/licenses/gpl-3.0.txt
  * Domain Path: /languages
- * GitHub Plugin URI: https://github.com/Askelon/WPMovieLibrary
+ * GitHub Plugin URI: https://github.com/CaerCam/WPMovieLibrary
  */
 
 // If this file is called directly, abort.
@@ -33,7 +33,7 @@ if ( ! defined( 'WPINC' ) ) {
 }
 
 define( 'WPML_NAME',                   'WPMovieLibrary' );
-define( 'WPML_VERSION',                '1.1.2' );
+define( 'WPML_VERSION',                '1.2' );
 define( 'WPML_SLUG',                   'wpml' );
 define( 'WPML_URL',                    plugins_url( basename( __DIR__ ) ) );
 define( 'WPML_PATH',                   plugin_dir_path( __FILE__ ) );
@@ -41,7 +41,7 @@ define( 'WPML_REQUIRED_PHP_VERSION',   '5.3' );
 define( 'WPML_REQUIRED_WP_VERSION',    '3.6' );
 define( 'WPML_SETTINGS_SLUG',          'wpml_settings' );
 define( 'WPML_SETTINGS_REVISION_NAME', 'settings_revision' );
-define( 'WPML_SETTINGS_REVISION',      12 );
+define( 'WPML_SETTINGS_REVISION',      15 );
 define( 'WPML_DEFAULT_POSTER_URL',     plugins_url( basename( __DIR__ ) ) . '/assets/img/no_poster{size}.jpg' );
 define( 'WPML_DEFAULT_POSTER_PATH',    WPML_PATH . '/assets/img/no_poster{size}.jpg' );
 define( 'WPML_MAX_TAXONOMY_LIST',      50 );
@@ -76,7 +76,7 @@ function wpml_requirements_met() {
 function wpml_requirements_error() {
 	global $wp_version;
 
-	require_once WPML_PATH . 'admin/common/views/requirements-error.php';
+	require_once WPML_PATH . 'views/requirements-error.php';
 }
 
 /**
@@ -85,9 +85,9 @@ function wpml_requirements_error() {
  * @since    1.0.1
  */
 function wpml_l10n() {
-	$locale = apply_filters( 'plugin_locale', get_locale(), WPML_SLUG );
-	load_textdomain( WPML_SLUG, trailingslashit( WP_LANG_DIR ) . basename( __DIR__ ) . '/languages/' . WPML_SLUG . '-' . $locale . '.mo' );
-	load_plugin_textdomain( WPML_SLUG, FALSE, basename( __DIR__ ) . '/languages/' );
+	$locale = apply_filters( 'plugin_locale', get_locale(), 'wpmovielibrary' );
+	load_textdomain( 'wpmovielibrary', trailingslashit( WP_LANG_DIR ) . basename( __DIR__ ) . '/languages/' . 'wpmovielibrary' . '-' . $locale . '.mo' );
+	load_plugin_textdomain( 'wpmovielibrary', FALSE, basename( __DIR__ ) . '/languages/' );
 }
 
 /*
@@ -102,28 +102,30 @@ if ( wpml_requirements_met() ) {
 	 * Public-Facing Functionality
 	 *----------------------------------------------------------------------------*/
 
+	/* Core */
 	require_once( WPML_PATH . 'includes/class-module.php' );
 	require_once( WPML_PATH . 'public/class-wpmovielibrary.php' );
 
+	/* Basics */
 	require_once( WPML_PATH . 'includes/class-wpml-settings.php' );
+	require_once( WPML_PATH . 'includes/class-wpml-cache.php' );
 	require_once( WPML_PATH . 'includes/class-wpml-utils.php' );
 
-	require_once( WPML_PATH . 'public/movies/class-wpml-movies.php' );
-	require_once( WPML_PATH . 'public/collections/class-wpml-collections.php' );
-	require_once( WPML_PATH . 'public/genres/class-wpml-genres.php' );
-	require_once( WPML_PATH . 'public/actors/class-wpml-actors.php' );
+	/* CPT and Taxo */
+	require_once( WPML_PATH . 'public/class-wpml-movies.php' );
+	require_once( WPML_PATH . 'public/class-wpml-collections.php' );
+	require_once( WPML_PATH . 'public/class-wpml-genres.php' );
+	require_once( WPML_PATH . 'public/class-wpml-actors.php' );
+
+	/* Self-speaking */
+	require_once( WPML_PATH . 'public/class-shortcodes.php' );
 
 	/* Widgets */
-
-	require_once( WPML_PATH . 'public/movies/class-media-widget.php' );
-	require_once( WPML_PATH . 'public/movies/class-most-rated-movies-widget.php' );
-	require_once( WPML_PATH . 'public/movies/class-recent-movies-widget.php' );
-	require_once( WPML_PATH . 'public/movies/class-status-widget.php' );
-	require_once( WPML_PATH . 'public/collections/class-collections-widget.php' );
-	require_once( WPML_PATH . 'public/genres/class-genres-widget.php' );
-	require_once( WPML_PATH . 'public/actors/class-actors-widget.php' );
-	require_once( WPML_PATH . 'public/statistics/class-statistics-widget.php' );
-	require_once( WPML_PATH . 'public/shortcodes/class-shortcodes.php' );
+	require_once( WPML_PATH . 'includes/class-wpml-widget.php' );
+	require_once( WPML_PATH . 'includes/widgets/class-statistics-widget.php' );
+	require_once( WPML_PATH . 'includes/widgets/class-taxonomies-widget.php' );
+	require_once( WPML_PATH . 'includes/widgets/class-details-widget.php' );
+	require_once( WPML_PATH . 'includes/widgets/class-movies-widget.php' );
 
 	/*
 	 * Register hooks that are fired when the plugin is activated or deactivated.
@@ -146,21 +148,21 @@ if ( wpml_requirements_met() ) {
 	if ( is_admin() ) {
 
 		require_once( WPML_PATH . 'includes/class-wpml-ajax.php' );
-		require_once( WPML_PATH . 'includes/class-stats.php' );
-		require_once( WPML_PATH . 'admin/dashboard/class-dashboard.php' );
-		require_once( WPML_PATH . 'admin/dashboard/class-dashboard-stats-widget.php' );
-		require_once( WPML_PATH . 'admin/dashboard/class-dashboard-latest-movies-widget.php' );
-		require_once( WPML_PATH . 'admin/dashboard/class-dashboard-most-rated-movies-widget.php' );
-		require_once( WPML_PATH . 'admin/dashboard/class-dashboard-quickaction-widget.php' );
-		require_once( WPML_PATH . 'admin/dashboard/class-dashboard-helper-widget.php' );
-		require_once( WPML_PATH . 'admin/api/class-tmdb.php' );
-		require_once( WPML_PATH . 'admin/api/class-wpml-tmdb.php' );
 		require_once( WPML_PATH . 'admin/class-wpmovielibrary-admin.php' );
-		require_once( WPML_PATH . 'admin/edit-movies/class-wpml-edit-movies.php' );
-		require_once( WPML_PATH . 'admin/media/class-wpml-media.php' );
-		require_once( WPML_PATH . 'admin/import/class-wpml-import-table.php' );
-		require_once( WPML_PATH . 'admin/import/class-wpml-import.php' );
-		require_once( WPML_PATH . 'admin/import/class-wpml-queue.php' );
+		require_once( WPML_PATH . 'admin/class-dashboard.php' );
+		require_once( WPML_PATH . 'admin/class-dashboard-stats-widget.php' );
+		require_once( WPML_PATH . 'admin/class-dashboard-latest-movies-widget.php' );
+		require_once( WPML_PATH . 'admin/class-dashboard-most-rated-movies-widget.php' );
+		require_once( WPML_PATH . 'admin/class-dashboard-quickaction-widget.php' );
+		require_once( WPML_PATH . 'admin/class-dashboard-helper-widget.php' );
+		require_once( WPML_PATH . 'admin/class-dashboard-vendor-widget.php' );
+		require_once( WPML_PATH . 'admin/class-wpml-api.php' );
+		require_once( WPML_PATH . 'admin/class-wpml-api-wrapper.php' );
+		require_once( WPML_PATH . 'admin/class-wpml-edit-movies.php' );
+		require_once( WPML_PATH . 'admin/class-wpml-media.php' );
+		require_once( WPML_PATH . 'admin/class-wpml-import-table.php' );
+		require_once( WPML_PATH . 'admin/class-wpml-import-queue.php' );
+		require_once( WPML_PATH . 'admin/class-wpml-import.php' );
 
 		add_action( 'plugins_loaded', array( 'WPMovieLibrary_Admin', 'get_instance' ) );
 

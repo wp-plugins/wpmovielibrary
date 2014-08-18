@@ -3,7 +3,7 @@
  * WPMovieLibrary
  *
  * @package   WPMovieLibrary
- * @author    Charlie MERLAND <charlie.merland@gmail.com>
+ * @author    Charlie MERLAND <charlie@caercam.org>
  * @license   GPL-3.0
  * @link      http://www.caercam.org/
  * @copyright 2014 Charlie MERLAND
@@ -15,7 +15,7 @@ if ( ! class_exists( 'WPMovieLibrary' ) ) :
 	* Plugin class
 	*
 	* @package WPMovieLibrary
-	* @author  Charlie MERLAND <charlie.merland@gmail.com>
+	* @author  Charlie MERLAND <charlie@caercam.org>
 	*/
 	class WPMovieLibrary extends WPML_Module {
 
@@ -39,6 +39,7 @@ if ( ! class_exists( 'WPMovieLibrary' ) ) :
 
 			$this->modules = array(
 				'WPML_Settings'    => WPML_Settings::get_instance(),
+				'WPML_Cache'       => WPML_Cache::get_instance(),
 				'WPML_Utils'       => WPML_Utils::get_instance(),
 				'WPML_Movies'      => WPML_Movies::get_instance(),
 				'WPML_Collections' => WPML_Collections::get_instance(),
@@ -48,11 +49,10 @@ if ( ! class_exists( 'WPMovieLibrary' ) ) :
 			);
 
 			$this->widgets = array(
-				'WPML_Recent_Movies_Widget',
-				'WPML_Most_Rated_Movies_Widget',
-				'WPML_Media_Widget',
-				'WPML_Status_Widget',
-				'WPML_Statistics_Widget'
+				'WPML_Statistics_Widget',
+				'WPML_Taxonomies_Widget',
+				'WPML_Details_Widget',
+				'WPML_Movies_Widget'
 			);
 
 		}
@@ -60,12 +60,12 @@ if ( ! class_exists( 'WPMovieLibrary' ) ) :
 		/**
 		 * Register callbacks for actions and filters
 		 * 
-		 * @since    1.0.0
+		 * @since    1.0
 		 */
 		public function register_hook_callbacks() {
 
 			// Load plugin text domain
-			add_action( 'init', array( $this, 'load_plugin_textdomain' ) );
+			add_action( 'plugins_loaded', array( $this, 'load_plugin_textdomain' ) );
 
 			// Widgets
 			add_action( 'widgets_init', array( $this, 'register_widgets' ) );
@@ -96,7 +96,7 @@ if ( ! class_exists( 'WPMovieLibrary' ) ) :
 		 * Taxonomies' registering functions and flush rewrite rules to update
 		 * the permalinks.
 		 *
-		 * @since    1.0.0
+		 * @since    1.0
 		 *
 		 * @param    boolean    $network_wide    True if WPMU superadmin uses
 		 *                                       "Network Activate" action, false if
@@ -134,7 +134,7 @@ if ( ! class_exists( 'WPMovieLibrary' ) ) :
 		 * converted to WordPress standars or removed. Default is conserve on
 		 * deactivation, convert on uninstall.
 		 *
-		 * @since    1.0.0
+		 * @since    1.0
 		 */
 		public function deactivate() {
 
@@ -146,7 +146,7 @@ if ( ! class_exists( 'WPMovieLibrary' ) ) :
 		/**
 		 * Runs activation code on a new WPMS site when it's created
 		 *
-		 * @since    1.0.0
+		 * @since    1.0
 		 *
 		 * @param    int    $blog_id
 		 */
@@ -159,7 +159,7 @@ if ( ! class_exists( 'WPMovieLibrary' ) ) :
 		/**
 		 * Prepares a single blog to use the plugin
 		 *
-		 * @since    1.0.0
+		 * @since    1.0
 		 *
 		 * @param    bool    $network_wide
 		 */
@@ -174,7 +174,7 @@ if ( ! class_exists( 'WPMovieLibrary' ) ) :
 		/**
 		 * Register and enqueue public-facing style sheet.
 		 *
-		 * @since    1.0.0
+		 * @since    1.0
 		 */
 		public function enqueue_styles() {
 
@@ -184,7 +184,7 @@ if ( ! class_exists( 'WPMovieLibrary' ) ) :
 		/**
 		 * Register and enqueue public-facing style sheet.
 		 *
-		 * @since    1.0.0
+		 * @since    1.0
 		 */
 		public function enqueue_scripts() {
 
@@ -194,14 +194,14 @@ if ( ! class_exists( 'WPMovieLibrary' ) ) :
 		/**
 		 * Load the plugin text domain for translation.
 		 *
-		 * @since    1.0.0
+		 * @since    1.0
 		 */
 		public function load_plugin_textdomain() {
 
-			$domain = WPML_SLUG;
+			$domain = 'wpmovielibrary';
 			$locale = apply_filters( 'plugin_locale', get_locale(), $domain );
 
-			load_textdomain( $domain, trailingslashit( WP_LANG_DIR ) . $domain . '/' . $domain . '-' . $locale . '.mo' );
+			load_textdomain( $domain, WPML_PATH . '/' . $domain . '-' . $locale . '.mo' );
 			load_plugin_textdomain( $domain, FALSE, basename( plugin_dir_path( dirname( __FILE__ ) ) ) . '/languages/' );
 
 		}
@@ -209,7 +209,7 @@ if ( ! class_exists( 'WPMovieLibrary' ) ) :
 		/**
 		 * Register the Class Widgets
 		 * 
-		 * @since    1.0.0 
+		 * @since    1.0 
 		 */
 		public function register_widgets() {
 
@@ -228,7 +228,7 @@ if ( ! class_exists( 'WPMovieLibrary' ) ) :
 		 * on the frontend as well, so although it is admin related this
 		 * must be public.
 		 *
-		 * @since    1.0.0
+		 * @since    1.0
 		 */
 		public function admin_bar_menu() {
 
@@ -236,10 +236,10 @@ if ( ! class_exists( 'WPMovieLibrary' ) ) :
 
 			$args = array(
 				'id'    => 'wpmovielibrary',
-				'title' => __( 'New Movie', WPML_SLUG ),
+				'title' => __( 'New Movie', 'wpmovielibrary' ),
 				'href'  => admin_url( 'post-new.php?post_type=movie' ),
 				'meta'  => array(
-					'title' => __( 'New Movie', WPML_SLUG )
+					'title' => __( 'New Movie', 'wpmovielibrary' )
 				)
 			);
 
@@ -257,7 +257,7 @@ if ( ! class_exists( 'WPMovieLibrary' ) ) :
 		/**
 		 * Uninstall the plugin, network wide.
 		 *
-		 * @since    1.0.0
+		 * @since    1.0
 		 */
 		public static function uninstall() {
 
@@ -283,7 +283,7 @@ if ( ! class_exists( 'WPMovieLibrary' ) ) :
 		/**
 		 * Set the uninstallation instructions
 		 *
-		 * @since    1.0.0
+		 * @since    1.0
 		 */
 		private static function _uninstall() {
 
@@ -298,7 +298,7 @@ if ( ! class_exists( 'WPMovieLibrary' ) ) :
 		/**
 		 * Initializes variables
 		 *
-		 * @since    1.0.0
+		 * @since    1.0
 		 */
 		public function init() {
 		}

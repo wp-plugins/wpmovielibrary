@@ -8,7 +8,7 @@ wpml = wpml || {};
 		/**
 		 * Movies Importer Metadata part
 		 * 
-		 * @since    1.0.0
+		 * @since    1.0
 		 */
 		wpml.importer.meta = wpml_import_meta = {
 
@@ -20,7 +20,32 @@ wpml = wpml || {};
 			select_list: '.wpml-import-movie-select',
 			select_all: '.movies > thead input[type=checkbox], .movies > tfoot input[type=checkbox]',
 			selected: '.movies > tbody input[type=checkbox]',
+			imported: '#wpml_imported_ids',
 		};
+
+			wpml.importer.meta.init = function() {
+
+				$( wpml_import_meta.selected ).on( 'click', function() {
+					wpml_import_meta.update_ids();
+				});
+			};
+
+			/**
+			* Update the imported IDs list
+			*/
+			wpml.importer.meta.update_ids = function( id ) {
+				var ids = [];
+				if ( undefined != $( '#p_' + id ) ) {
+					ids = $( wpml_import_meta.imported ).val().split( ',' );
+					ids.push( id );
+				}
+				else {
+					$( wpml_import_meta.selected + ':checked' ).each( function( i ) {
+						ids.push( this.value );
+					});
+				}
+				$( wpml_import_meta.imported ).val( ids );
+			};
 
 			/**
 			* Handle Bulk actions
@@ -68,7 +93,7 @@ wpml = wpml || {};
 			 * Search movie by its title, update the table row with
 			 * Poster and Director and fill the data fields.
 			 * 
-			 * @since    1.0.0
+			 * @since    1.0
 			 * 
 			 * @param    int       Movie Post ID
 			 */
@@ -123,7 +148,7 @@ wpml = wpml || {};
 			/**
 			 * Display a list of movies matching the search.
 			 * 
-			 * @since    1.0.0
+			 * @since    1.0
 			 * 
 			 * @param    int       Movies Post ID
 			 * @param    object    Movies to add to the selection list
@@ -157,7 +182,7 @@ wpml = wpml || {};
 			/**
 			 * Display a list of movies matching the search.
 			 * 
-			 * @since    1.0.0
+			 * @since    1.0
 			 * 
 			 * @param    int    Movie Post ID
 			 * @param    int    Movie TMDb ID
@@ -240,5 +265,8 @@ wpml = wpml || {};
 				$parent.find( '.movie_tmdb_id' ).html( '<a href="http://www.themoviedb.org/movie/' + data._tmdb_id + '">' + data._tmdb_id + '</a>' );
 
 				$( _post_id + '_tmdb_data' ).appendTo( '#tmdb_data' );
+				wpml_import_meta.update_ids( data._id );
 				$parent.find( '.loading' ).removeClass( 'loading' );
 			};
+
+		wpml_import_meta.init();
