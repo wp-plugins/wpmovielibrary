@@ -35,9 +35,10 @@ Features:
 *    Plugin Custom Dashboard
 *    Much more!
 
-Official website: http://wpmovielibrary.com/
-Documentation: http://wpmovielibrary.com/documentation/
-Development: https://github.com/CaerCam/wpmovielibrary/
+
+*    Official website: http://wpmovielibrary.com/
+*    Documentation: http://wpmovielibrary.com/documentation/
+*    Development: https://github.com/CaerCam/wpmovielibrary/
 
 == Installation ==
 
@@ -80,7 +81,6 @@ Your theme/plugin/widget most likely doesn't support Custom Post Types; open a t
 == Changelog ==
 
 == 1.2 ==
-
 * Feature - Implement caching
 * Feature - Implement templates
 * Feature - Complete Widgets reboot
@@ -109,17 +109,14 @@ Your theme/plugin/widget most likely doesn't support Custom Post Types; open a t
 * Fix - Taxonomies Widget minor style bug
 
 = 1.1.2 =
-
 * Fix - PHP Warnings with shortcodes when no attribute is passed
 * Tweak - Movie Images shortcodes basic styling
 
 = 1.1.1 =
-
 * Fix - Default poster for movies only
 * Fix - PHP Warning with runtime and release date
 
 == 1.1 ==
-
 * Features - Implements shortcodes
 * Features - Create 8 new shortcodes
 * Features - Create 16+ aliases for specific shortcodes
@@ -159,3 +156,11 @@ Your theme/plugin/widget most likely doesn't support Custom Post Types; open a t
 
 == 1.0 ==
 * First stable release
+
+== Upgrade Notice ==
+
+= 1.2 =
+Implementation of caching, templates, fully reworked Widgets and lots of tweaks and bug fixes
+
+= 1.1 =
+Plugin now includes shortcodes
