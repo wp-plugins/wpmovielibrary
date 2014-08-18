@@ -19,7 +19,7 @@ wpml = wpml || {};
 			/**
 			 * Init Events
 			 * 
-			 * @since    1.0.0
+			 * @since    1.0
 			 */
 			wpml.importer.view.init = function() {
 
@@ -36,7 +36,7 @@ wpml = wpml || {};
 			 * Reload the movie table. Used when new movies are imported or
 			 * when browsing through the table.
 			 * 
-			 * @since    1.0.0
+			 * @since    1.0
 			 */
 			wpml.importer.view.reload = function( data, list ) {
 
@@ -86,6 +86,8 @@ wpml = wpml || {};
 							wpml_import_view.update_count( 'import_queue', response.data.total_items, response.i18n.total_items_i18n );
 						else
 							wpml_import_view.update_count( 'imported', response.data.total_items, response.i18n.total_items_i18n );
+
+						wpml_queue_utils.init();
 					},
 					complete: function( r ) {
 						wpml.update_nonce( data.nonce_name, r.responseJSON.nonce );
@@ -97,7 +99,7 @@ wpml = wpml || {};
 			/**
 			 * Navigate through the table pages using navigation arrow links
 			 * 
-			 * @since    1.0.0
+			 * @since    1.0
 			 * 
 			 * @param    object    Link HTML Object
 			 */
@@ -114,7 +116,7 @@ wpml = wpml || {};
 			/**
 			 * Navigate through the table pages using pagination input
 			 * 
-			 * @since    1.0.0
+			 * @since    1.0
 			 */
 			wpml.importer.view.paginate = function() {
 				var data = {
@@ -132,7 +134,7 @@ wpml = wpml || {};
 			/**
 			 * Update the menu badges containing movies counts.
 			 * 
-			 * @since    1.0.0
+			 * @since    1.0
 			 * 
 			 * @param    string    Which menu, queued or imported?
 			 * @param    int       Increment or decrement?
@@ -147,7 +149,13 @@ wpml = wpml || {};
 
 				if ( 'import_queue' == wot ) {
 					$( '.displaying-num', wpml_queue.queued_list ).text( i_i18n );
-					$( '#_queued_left', wpml_queue.queued_list ).text( i );
+					$( wpml_queue.progress_block ).removeClass( 'visible' );
+					$( wpml_queue.progress_left, wpml_queue.queued_list ).text( '0' );
+					$( wpml_queue.progress_queued, wpml_queue.queued_list ).text( '0' );
+					$( wpml_queue.progress_value ).val( 0 );
+					$( wpml_queue.progress ).width( 0 );
+					$( wpml_queue.progress_status ).css( { display: 'inline-block' } );
+					$( wpml_queue.progress_status_message ).hide();
 				}
 			};
 
@@ -158,7 +166,7 @@ wpml = wpml || {};
 			 * This is needed because of the AJAX update of the table 
 			 * breaking WordPress' JavaScript Events handlers.
 			 * 
-			 * @since    1.0.0
+			 * @since    1.0
 			 */
 			wpml.importer.view.toggle_button = function() {
 
@@ -175,7 +183,7 @@ wpml = wpml || {};
 			 * This is needed because of the AJAX update of the table 
 			 * breaking WordPress' JavaScript Events handlers.
 			 * 
-			 * @since    1.0.0
+			 * @since    1.0
 			 * 
 			 * @param    int    Which selector.
 			 */
