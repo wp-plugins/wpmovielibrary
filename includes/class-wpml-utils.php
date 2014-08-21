@@ -426,6 +426,7 @@ if ( ! class_exists( 'WPML_Utils' ) ) :
 			if ( '' == $time_format )
 				$time_format = 'G \h i \m\i\n';
 
+			$runtime = intval( $runtime );
 			$time = date_i18n( $time_format, mktime( 0, $runtime ) );
 			if ( false !== stripos( $time, 'am' ) || false !== stripos( $time, 'pm' ) )
 				$time = date_i18n( 'G:i', mktime( 0, $runtime ) );
@@ -1503,6 +1504,7 @@ if ( ! class_exists( 'WPML_Utils' ) ) :
 				$name = apply_filters( 'wpml_cache_name', $term_slug . '_archive', $wp_query->query_vars );
 			else
 				$name = WPML_Cache::wpml_cache_name( $term_slug . '_archive', $wp_query->query_vars );
+
 			$content = WPML_Cache::output( $name, function() use ( $wp_query, $slugs, $term_slug, $term_title ) {
 
 				$wp_query->query_vars['wpml_archive_page'] = 1;
@@ -1539,7 +1541,7 @@ if ( ! class_exists( 'WPML_Utils' ) ) :
 				$attributes = array( 'taxonomy' => $term_slug, 'links' => $links );
 				$content = WPMovieLibrary::render_template( 'archives/archives.php', $attributes, $require = 'always' );
 
-				$pagination = self::paginate_links( $args );
+				$pagination = WPML_Utils::paginate_links( $args );
 
 				$content = $content . $pagination;
 
@@ -1592,7 +1594,7 @@ if ( ! class_exists( 'WPML_Utils' ) ) :
 		 * 
 		 * @return   string   String of page links or array of page links.
 		*/
-		private static function paginate_links( $args = '' ) {
+		public static function paginate_links( $args = '' ) {
 
 			$defaults = array(
 				'base'      => '%_%',
