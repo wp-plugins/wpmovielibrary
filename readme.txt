@@ -226,6 +226,7 @@ Your theme/plugin/widget most likely doesn't support Custom Post Types; open a t
 = 1.0 =
 * First stable release
 
-== Upgrade notice ==
+== Upgrade Notice ==
+
 = 2.0 =
 WPMovieLibrary 2.0 is a major update. Test your templates and themes prior to updating, see that extensions are up to date and 2.0 compatible, and be sure to make backups of your database and file before updating. Reading the [release notes](http://wpmovielibrary.com/development/release-notes/#version-1.3) is a good idea too.
