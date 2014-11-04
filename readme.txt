@@ -65,7 +65,7 @@ Developers and Translators can contribute to the source code on the [GitHub Repo
 
 = Minimum Requirements =
 
-* WordPress 3.9 or greater
+* WordPress 3.8 or greater
 * PHP version 5.4 or greater
 * MySQL version 5.0 or greater
 
@@ -227,5 +227,5 @@ Your theme/plugin/widget most likely doesn't support Custom Post Types; open a t
 * First stable release
 
 == Upgrade notice ==
-= 1.3 =
-WPMovieLibrary 1.3 is a major update. Test extensions and your theme prior to updating, see that extensions are up to date and 1.3 compatible, and be sure to keep backups of your databases. Reading the [release notes](http://wpmovielibrary.com/development/release-notes/#version-1.3) is a good idea too.
+= 2.0 =
+WPMovieLibrary 2.0 is a major update. Test your templates and themes prior to updating, see that extensions are up to date and 2.0 compatible, and be sure to make backups of your database and file before updating. Reading the [release notes](http://wpmovielibrary.com/development/release-notes/#version-1.3) is a good idea too.
