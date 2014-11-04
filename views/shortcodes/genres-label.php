@@ -11,7 +11,7 @@
  */
 ?>
 
-	<div class="wpml_shortcode_spans">
-		<span class="wpml_shortcode_span wpml_shortcode_span_title wpml_movie_genre_title"><?php echo $title ?></span>
-		<span class="wpml_shortcode_span wpml_shortcode_span_value wpml_movie_genre_value"><?php echo $genres ?></span>
+	<div class="wpmoly shortcode block">
+		<span class="wpmoly shortcode item genre title"><?php echo $title ?></span>
+		<span class="wpmoly shortcode item genre value"><?php echo $genres ?></span>
 	</div>

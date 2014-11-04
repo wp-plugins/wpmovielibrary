@@ -16,7 +16,7 @@
  * 
  * @since    1.2
  */
-class WPML_Details_Widget extends WPML_Widget {
+class WPMOLY_Details_Widget extends WPMOLY_Widget {
 
 	/**
 	 * Specifies the classname and description, instantiates the widget. No
@@ -26,8 +26,8 @@ class WPML_Details_Widget extends WPML_Widget {
 
 		$this->widget_name        = __( 'WPMovieLibrary Details', 'wpmovielibrary' );
 		$this->widget_description = __( 'Display a list of the available details: status, media and rating.', 'wpmovielibrary' );
-		$this->widget_css         = 'wpmovielibrary wpml-widget wpml-details-widget';
-		$this->widget_id          = 'wpmovielibrary_details_widget';
+		$this->widget_css         = 'wpmoly details';
+		$this->widget_id          = 'wpmovielibrary-details-widget';
 		$this->widget_form        = 'details-widget/details-admin.php';
 
 		$this->widget_params      = array(
@@ -53,20 +53,14 @@ class WPML_Details_Widget extends WPML_Widget {
 			)
 		);
 
-		$this->details = array(
-			'status' => array(
-				'default'  => __( 'Select a status', 'wpmovielibrary' ),
-				'empty'    => __( 'No status to display.', 'wpmovielibrary' )
-			),
-			'media' => array(
-				'default'  => __( 'Select a media', 'wpmovielibrary' ),
-				'empty'    => __( 'No media to display.', 'wpmovielibrary' )
-			),
-			'rating' => array(
-				'default'  => __( 'Select a rating', 'wpmovielibrary' ),
-				'empty'    => __( 'No rating to display.', 'wpmovielibrary' )
-			),
-		);
+		$this->details = array();
+
+		$supported = WPMOLY_Settings::get_supported_movie_details();
+		foreach ( $supported as $slug => $detail )
+			$this->details[ $slug ] = array(
+				'default'  => sprintf( __( 'Select a %s', 'wpmovielibrary' ), $slug ),
+				'empty'    => sprintf( __( 'No %s to display.', 'wpmovielibrary' ), $slug )
+			);
 
 		parent::__construct();
 	}
@@ -84,10 +78,10 @@ class WPML_Details_Widget extends WPML_Widget {
 	public function widget( $args, $instance ) {
 
 		// Caching
-		$name = apply_filters( 'wpml_cache_name', 'details_widget', $args );
+		$name = apply_filters( 'wpmoly_cache_name', 'details_widget', $args );
 		// Naughty PHP 5.3 fix
 		$widget = &$this;
-		$content = WPML_Cache::output( $name, function() use ( $widget, $args, $instance ) {
+		$content = WPMOLY_Cache::output( $name, function() use ( $widget, $args, $instance ) {
 
 			return $widget->widget_content( $args, $instance );
 		});
@@ -107,24 +101,21 @@ class WPML_Details_Widget extends WPML_Widget {
 	 */
 	public function widget_content( $args, $instance ) {
 
-		if ( ! in_array( $instance['detail'], array( 'status', 'media', 'rating' ) ) )
-			return false;
-
 		extract( $args, EXTR_SKIP );
 		extract( $instance );
 
 		$title = apply_filters( 'widget_title', $title );
 
-		$details = call_user_func( "WPML_Settings::get_available_movie_{$detail}" );
-		$rewrite = call_user_func( "WPML_Settings::wpml__details_rewrite" );
-		$movies = WPML_Settings::wpml__movie_rewrite();
+		$details = call_user_func( "WPMOLY_Settings::get_available_movie_{$detail}" );
+		$rewrite = wpmoly_o( 'rewrite-details' );
+		$movies  = wpmoly_o( 'rewrite-movie' );
 
 		if ( ! empty( $details ) ) {
 
-			$this->widget_css .= " wpml-{$detail}-widget";
+			$this->widget_css .= " wpmoly {$detail}";
 
 			if ( $css )
-				$this->widget_css .= ' wpml-list custom';
+				$this->widget_css .= ' list custom';
 
 			$items = array();
 			foreach ( $details as $slug => $_title ) {
@@ -133,7 +124,7 @@ class WPML_Details_Widget extends WPML_Widget {
 
 				$item = array(
 					'attr_title'  => sprintf( __( 'Permalink for &laquo; %s &raquo;', 'wpmovielibrary' ), __( $_title, 'wpmovielibrary' ) ),
-					'link'        => home_url( "/{$movies}/{$_slug}/" )
+					'link'        => WPMOLY_L10n::get_meta_permalink( $detail, $_slug, $type = 'detail', $format = 'raw' )
 				);
 
 				if ( 'rating' != $detail )
@@ -141,7 +132,7 @@ class WPML_Details_Widget extends WPML_Widget {
 				else if ( 'rating' == $detail && $list )
 					$item['title'] = esc_attr__( $_title, 'wpmovielibrary' ) . ' (' . $slug . '&#9733;)';
 				else
-					$item['title'] = '<div class="movie_rating_display stars_' . str_replace( '.', '_', $slug ) . '"><div class="stars_labels"><span class="stars_label stars_label_' . str_replace( '.', '_', $slug ) . '">' . esc_attr__( $_title, 'wpmovielibrary' ) . '</span></div></div>';
+					$item['title'] = '<div class="movie-rating-display">' . apply_filters( 'wpmoly_movie_rating_stars', $slug ) . '<span class="rating-label">' . esc_attr__( $_title, 'wpmovielibrary' ) . '</span></div>';
 
 				$items[] = $item;
 			}

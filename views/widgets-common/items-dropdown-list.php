@@ -12,9 +12,11 @@
 ?>
 	<div class="<?php echo $style ?>">
 
-		<div class="wpml-widget-description"><?php echo $description ?></div>
+<?php if ( '' != $description ) : ?>
+		<div class="<?php echo $style ?> description"><?php echo $description ?></div>
+<?php endif; ?>
 
-		<select class="wpml-list">
+		<select class="<?php echo $style ?> list">
 			<option value=""><?php echo $default_option ?></option>
 <?php foreach ( $items as $item ) : ?>
 			<option value="<?php echo $item['link'] ?>"><?php echo $item['title'] ?></option>

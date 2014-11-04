@@ -11,9 +11,9 @@
  * @copyright 2014 CaerCam.org
  */
 
-if ( ! class_exists( 'WPML_Dashboard_Helper_Widget' ) ) :
+if ( ! class_exists( 'WPMOLY_Dashboard_Helper_Widget' ) ) :
 
-	class WPML_Dashboard_Helper_Widget extends WPML_Dashboard {
+	class WPMOLY_Dashboard_Helper_Widget extends WPMOLY_Dashboard {
 
 		/**
 		 * Widget ID
@@ -22,7 +22,7 @@ if ( ! class_exists( 'WPML_Dashboard_Helper_Widget' ) ) :
 		 * 
 		 * @var      string
 		 */
-		protected $widget_id = 'wpml_dashboard_helper_widget';
+		protected $widget_id = 'wpmoly_dashboard_helper_widget';
 
 		/**
 		 * Constructor
@@ -43,32 +43,32 @@ if ( ! class_exists( 'WPML_Dashboard_Helper_Widget' ) ) :
 				'support' => array(
 					'url'   => 'http://wordpress.org/support/plugin/wpmovielibrary',
 					'title' => __( 'Support', 'wpmovielibrary' ),
-					'icon'  => 'dashicons dashicons-sos'
+					'icon'  => 'wpmolicon icon-help'
 				),
 				'report' => array(
-					'url'   => 'https://github.com/CaerCam/wpmovielibrary/issues/new',
+					'url'   => 'https://github.com/wpmovielibrary/wpmovielibrary/issues/new',
 					'title' => __( 'Report a bug', 'wpmovielibrary' ),
-					'icon'  => 'dashicons dashicons-flag'
+					'icon'  => 'wpmolicon icon-bug'
 				),
 				'contribute' => array(
-					'url'   => 'https://github.com/CaerCam/wpmovielibrary',
+					'url'   => 'https://github.com/wpmovielibrary/wpmovielibrary',
 					'title' => __( 'Contribute', 'wpmovielibrary' ),
-					'icon'  => 'dashicons dashicons-admin-tools'
+					'icon'  => 'wpmolicon icon-code'
 				),
 				'donate' => array(
 					'url'   => 'http://wpmovielibrary.com/contribute/#donate',
 					'title' => __( 'Donate', 'wpmovielibrary' ),
-					'icon'  => 'dashicons dashicons-heart'
+					'icon'  => 'wpmolicon icon-heart'
 				),
 				'documentation' => array(
 					'url'   => 'http://wpmovielibrary.com/documentation/',
 					'title' => __( 'Documentation', 'wpmovielibrary' ),
-					'icon'  => 'dashicons dashicons-welcome-learn-more'
+					'icon'  => 'wpmolicon icon-doc'
 				),
 				'homepage' => array(
 					'url'   => 'http://wpmovielibrary.com/',
 					'title' => __( 'Official website', 'wpmovielibrary' ),
-					'icon'  => 'dashicons dashicons-admin-home'
+					'icon'  => 'wpmolicon icon-home'
 				)
 			);
 
@@ -77,7 +77,7 @@ if ( ! class_exists( 'WPML_Dashboard_Helper_Widget' ) ) :
 
 			$links = implode( '', $links );
 
-			echo self::render_template( '/dashboard-help/help.php', array( 'links' => $links ) );
+			echo self::render_admin_template( '/dashboard-help/help.php', array( 'links' => $links ) );
 		}
 
 		/**
