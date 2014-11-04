@@ -53,13 +53,13 @@ Short list of supported features:
 Want to extend WPMovieLibrary? Additionnal extensions are available on [WPMovieLibrary/Extensions](http://wpmovielibrary.com/extensions/)
 
 = Get involved =
-Developers and Translators can contribute to the source code on the [GitHub Repository](https://github.com/CaerCam/wpmovielibrary/).
+Developers and Translators can contribute to the source code on the [GitHub Repository](https://github.com/wpmovielibrary/wpmovielibrary/).
 
 = Links =
 
 *    [Official website](http://wpmovielibrary.com/)
 *    [Documentation](http://wpmovielibrary.com/documentation/)
-*    [Development](https://github.com/CaerCam/wpmovielibrary/)
+*    [Development](https://github.com/wpmovielibrary/wpmovielibrary/)
 
 == Installation ==
 
