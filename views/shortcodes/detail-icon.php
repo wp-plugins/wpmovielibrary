@@ -11,4 +11,4 @@
  */
 ?>
 
-	<div class="wpml_movie_<?php echo $detail ?> <?php echo $data ?> wpml_detail_icon"></div>
+	<div class="wpmoly shortcode item detail <?php echo $detail ?>"><span title="<?php echo $title ?>" class="wpmolicon icon-<?php echo $data ?>"></span></div>

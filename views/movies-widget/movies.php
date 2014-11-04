@@ -6,7 +6,7 @@
  * 
  * @since    1.2
  * 
- * @uses    $widget current Widget object
+ * @uses    $style current Widget style
  * @uses    $description Widget's description
  * @uses    $items array of movies
  * @uses    $show_poster which way to show posters
@@ -17,13 +17,15 @@
 
 	<div class="<?php echo $style ?>">
 
-		<div class="wpml-widget-description"><?php echo $description ?></div>
+<?php if ( '' != $description ) : ?>
+		<div class="wpmoly movie description"><?php echo $description ?></div>
+<?php endif; ?>
 
 <?php foreach ( $items as $item ) : ?>
-		<a href="<?php echo $item['link'] ?>" title="<?php echo __( 'Read more about', 'wpmovielibrary' ) . $item['title'] ?>">
-			<figure id="movie-<?php the_ID(); ?>" class="wpml-movies-widget wpml-movie">
+		<a class="wpmoly movie link" href="<?php echo $item['link'] ?>" title="<?php echo __( 'Read more about', 'wpmovielibrary' ) . $item['title'] ?>">
+			<figure id="movie-<?php the_ID(); ?>" class="wpmoly movie">
 <?php if ( 'no' == $show_poster || 'before' == $show_title ) : ?>
-				<div id="movie-<?php the_ID(); ?>-title" class="wpml-movies-widget movie-title"><?php echo $item['title'] ?></div>
+				<div id="movie-<?php the_ID(); ?>-title" class="wpmoly movie title"><?php echo $item['title'] ?></div>
 <?php endif; ?>
 
 <?php if ( 'small' == $show_poster || 'normal' == $show_poster ) : ?>
@@ -31,11 +33,11 @@
 <?php endif; ?>
 
 <?php if ( 'no' != $show_rating ) : ?>
-				<div class="movie_rating_display <?php echo $item['rating_str'] . ' ' . $show_rating ?>"><?php if ( 'starsntext' == $show_rating ) echo '<small>' . $item['rating'] . '/5</small>' ?></div>
+				<div class="wpmoly movie rating"><?php echo $item['_rating'] ?><?php if ( 'starsntext' == $show_rating ) echo '<span class="wpmoly movie rating label">' . $item['rating'] . '/5</span>' ?></div>
 <?php endif; ?>
 
 <?php if ( 'after' == $show_title ) : ?>
-				<div id="movie-<?php the_ID(); ?>-title" class="wpml-movies-widget movie-title"><?php echo $item['title'] ?></div>
+				<div id="movie-<?php the_ID(); ?>-title" class="wpmoly movie title"><?php echo $item['title'] ?></div>
 <?php endif; ?>
 
 			</figure>

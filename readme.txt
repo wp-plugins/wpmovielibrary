@@ -2,9 +2,9 @@
 Contributors: askelon
 Donate link: http://wpmovielibrary.com/contribute/#donate
 Tags: movie, movies, movie database, movie library, movie collection, cinema, movie genre, actor, actor, movie image, movie poster, movie meta, movie metadata, tmdb
-Requires at least: 3.6
+Requires at least: 3.8
 Tested up to: 4.0
-Stable tag: 1.2.2
+Stable tag: 2.0
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -65,10 +65,9 @@ Developers and Translators can contribute to the source code on the [GitHub Repo
 
 = Minimum Requirements =
 
-* WordPress 3.8 or greater
-* PHP version 5.2.4 or greater
+* WordPress 3.9 or greater
+* PHP version 5.4 or greater
 * MySQL version 5.0 or greater
-* Some payment gateways require fsockopen support (for IPN access)
 
 = Automatic installation =
 
@@ -115,6 +114,24 @@ Your theme/plugin/widget most likely doesn't support Custom Post Types; open a t
 7. Import queue
 
 == Changelog ==
+
+= 2.0 =
+* Feature - Complete reboot of Settings
+* Feature - Include movies in search results
+* Feature - Coutry names and languages translation
+* Feature - Production countries flags
+* Feature - Find movies by metadata
+* Feature - Grid Shortcode
+* Tweak - Dedicated icon font
+* Tweak - Updated Admin Bar menu
+* Tweak - Updated Metabox in editor
+* Tweak - Attachment Editor Modal Window accessible for imported images in movie editor (WP4+)
+* Tweak - Random sorting added to Movies Widget
+* Tweak - Movies by Meta in Movies Widget
+* Tweak - Added Language, Subtitles and Video Format details
+* Tweak - Added Certification, Adult, Budget, Revenue, Tagline and Homepage metadata
+* Dev - Work in progress: lots of hooks and tweaks to make the plugin more extendable
+* Dev - Updated metadata format
 
 = 1.2.2 =
 * Tweak - Media Modals CSS fixes for WordPress 4.0
@@ -209,3 +226,6 @@ Your theme/plugin/widget most likely doesn't support Custom Post Types; open a t
 = 1.0 =
 * First stable release
 
+== Upgrade notice ==
+= 1.3 =
+WPMovieLibrary 1.3 is a major update. Test extensions and your theme prior to updating, see that extensions are up to date and 1.3 compatible, and be sure to keep backups of your databases. Reading the [release notes](http://wpmovielibrary.com/development/release-notes/#version-1.3) is a good idea too.

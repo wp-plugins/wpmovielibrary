@@ -11,9 +11,9 @@
  * @copyright 2014 CaerCam.org
  */
 
-if ( ! class_exists( 'WPML_Dashboard_Vendor_Widget' ) ) :
+if ( ! class_exists( 'WPMOLY_Dashboard_Vendor_Widget' ) ) :
 
-	class WPML_Dashboard_Vendor_Widget extends WPML_Dashboard {
+	class WPMOLY_Dashboard_Vendor_Widget extends WPMOLY_Dashboard {
 
 		/**
 		 * Widget ID
@@ -22,7 +22,7 @@ if ( ! class_exists( 'WPML_Dashboard_Vendor_Widget' ) ) :
 		 * 
 		 * @var      string
 		 */
-		protected $widget_id = 'wpml_dashboard_vendor_widget';
+		protected $widget_id = 'wpmoly_dashboard_vendor_widget';
 
 		/**
 		 * Constructor
@@ -43,17 +43,17 @@ if ( ! class_exists( 'WPML_Dashboard_Vendor_Widget' ) ) :
 				'facebook' => array(
 					'url'   => 'http://facebook.com/wpmovielibrary',
 					'title' => 'Facebook',
-					'icon'  => 'dashicons dashicons-facebook-alt'
+					'icon'  => 'wpmolicon icon-facebook'
 				),
 				'twitter' => array(
 					'url'   => 'https://twitter.com/WPMovieLibrary',
 					'title' => 'Twitter',
-					'icon'  => 'dashicons dashicons-twitter'
+					'icon'  => 'wpmolicon icon-twitter'
 				),
 				'google' => array(
 					'url'   => 'https://www.google.com/+Wpmovielibraryplugin',
 					'title' => 'Google+',
-					'icon'  => 'dashicons dashicons-googleplus'
+					'icon'  => 'wpmolicon icon-googleplus'
 				)
 			);
 
@@ -62,7 +62,7 @@ if ( ! class_exists( 'WPML_Dashboard_Vendor_Widget' ) ) :
 
 			$links = implode( '', $links );
 
-			echo self::render_template( '/dashboard-vendor/vendor.php', array( 'links' => $links ) );
+			echo self::render_admin_template( '/dashboard-vendor/vendor.php', array( 'links' => $links ) );
 		}
 
 		/**

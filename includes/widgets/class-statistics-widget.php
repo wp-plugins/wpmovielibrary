@@ -15,7 +15,7 @@
  * 
  * @since    1.0
  */
-class WPML_Statistics_Widget extends WP_Widget {
+class WPMOLY_Statistics_Widget extends WP_Widget {
 
 	/**
 	 * Specifies the classname and description, instantiates the widget,
@@ -24,10 +24,10 @@ class WPML_Statistics_Widget extends WP_Widget {
 	public function __construct() {
 
 		parent::__construct(
-			'wpml-statistics-widget',
+			'wpmoly-statistics-widget',
 			__( 'WPMovieLibrary Statistics', 'wpmovielibrary' ),
 			array(
-				'classname'	=>	'wpml-statistics-widget',
+				'classname'	=>	'wpmoly-statistics-widget',
 				'description'	=>	__( 'Display some statistics about your movie library', 'wpmovielibrary' )
 			)
 		);
@@ -42,10 +42,10 @@ class WPML_Statistics_Widget extends WP_Widget {
 	public function widget( $args, $instance ) {
 
 		// Caching
-		$name = apply_filters( 'wpml_cache_name', 'statistics_widget', $args );
+		$name = apply_filters( 'wpmoly_cache_name', 'statistics_widget', $args );
 		// Naughty PHP 5.3 fix
 		$widget = &$this;
-		$content = WPML_Cache::output( $name, function() use ( $widget, $args, $instance ) {
+		$content = WPMOLY_Cache::output( $name, function() use ( $widget, $args, $instance ) {
 
 			return $widget->widget_content( $args, $instance );
 		});
@@ -66,7 +66,7 @@ class WPML_Statistics_Widget extends WP_Widget {
 
 		$count = (array) wp_count_posts( 'movie' );
 		$count = array(
-			'movie'       => $count['publish'],
+			'movies'      => $count['publish'],
 			'imported'    => $count['import-draft'],
 			'queued'      => $count['import-queued'],
 			'draft'       => $count['draft'],
@@ -76,29 +76,32 @@ class WPML_Statistics_Widget extends WP_Widget {
 		$count['collections'] = wp_count_terms( 'collection' );
 		$count['genres'] = wp_count_terms( 'genre' );
 		$count['actors'] = wp_count_terms( 'actor' );
+		$count = array_map( 'intval', $count );
 
-		$movie = WPML_Settings::wpml__movie_rewrite();
-		$movie = ( '' != $movie ? $movie : 'collection' );
-		$collection = WPML_Settings::taxonomies__collection_rewrite();
+		$movie      = wpmoly_o( 'rewrite-movie' );
+		$collection = wpmoly_o( 'rewrite-collection' );
+		$genre      = wpmoly_o( 'rewrite-genre' );
+		$actor      = wpmoly_o( 'rewrite-actor' );
+
+		$movie      = ( '' != $movie ? $movie : 'movie' );
 		$collection = ( '' != $collection ? $collection : 'collection' );
-		$genre = WPML_Settings::taxonomies__genre_rewrite();
-		$genre = ( '' != $genre ? $genre : 'genre' );
-		$actor = WPML_Settings::taxonomies__actor_rewrite();
-		$actor = ( '' != $actor ? $actor : 'actor' );
+		$genre      = ( '' != $genre ? $genre : 'genre' );
+		$actor      = ( '' != $actor ? $actor : 'actor' );
 
-		$links = array(
-			'%total%' 	=> sprintf( '<a href="%s">%s</a>', home_url( $movie . '/' ), sprintf( _n( 'one movie', '%s movies', $count['total'], 'wpmovielibrary' ), '<strong>' . $count['total'] . '</strong>' ) ),
-			'%collections%'	=> sprintf( '<a href="%s">%s</a>', home_url( $collection . '/' ), sprintf( _n( 'one collection', '%s collections', $count['collections'], 'wpmovielibrary' ), '<strong>' . $count['collections'] . '</strong>' ) ),
-			'%genres%'	=> sprintf( '<a href="%s">%s</a>', home_url( $genre . '/' ), sprintf( _n( 'one genre', '%s genres', $count['genres'], 'wpmovielibrary' ), '<strong>' . $count['genres'] . '</strong>' ) ),
-			'%actors%'	=> sprintf( '<a href="%s">%s</a>', home_url( $actor . '/' ), sprintf( _n( 'one actor', '%s actors', $count['actors'], 'wpmovielibrary' ), '<strong>' . $count['actors'] . '</strong>' ) )
-		);
+		extract( $count );
+
+		$links = array();
+		$links['%total%'] 	= sprintf( '<a href="%s">%s</a>', get_post_type_archive_link( 'movie' ), sprintf( _n( '<strong>1</strong> movie', '<strong>%d</strong> movies', $movies, 'wpmovielibrary' ), $movies ) );
+		$links['%collections%']	= WPMOLY_L10n::get_taxonomy_permalink( $collection, sprintf( _n( '<strong>1</strong> collection', '<strong>%d</strong> collections', $collections, 'wpmovielibrary' ), $collections ) );
+		$links['%genres%']	= WPMOLY_L10n::get_taxonomy_permalink( $genre, sprintf( _n( '<strong>1</strong> genre', '<strong>%d</strong> genres', $genres, 'wpmovielibrary' ), $genres ) );
+		$links['%actors%']	= WPMOLY_L10n::get_taxonomy_permalink( $actor, sprintf( _n( '<strong>1</strong> actor', '<strong>%d</strong> actors', $actors, 'wpmovielibrary' ), $actors ) );
 
 		$title = $before_title . apply_filters( 'widget_title', $title ) . $after_title;
 		$description = esc_attr( $description );
 		$format = wpautop( wp_kses( $format, array( 'ul', 'ol', 'li', 'p', 'span', 'em', 'i', 'p', 'strong', 'b', 'br' ) ) );
 
 		$content = str_replace( array_keys( $links ), array_values( $links ), $format );
-		$style = 'wpml-widget wpml-statistics';
+		$style = 'wpmoly-widget wpmoly-statistics';
 
 		$attributes = array( 'content' => $content, 'description' => $description, 'style' => $style );
 

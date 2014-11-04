@@ -11,7 +11,9 @@
 ?>
 	<div class="<?php echo $style ?>">
 
-		<div class="wpml-widget-description"><?php echo $description ?></div>
+<?php if ( '' != $description ) : ?>
+		<div class="<?php echo $style ?> description"><?php echo $description ?></div>
+<?php endif; ?>
 
 		<?php echo $content ?>
 

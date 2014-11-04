@@ -15,7 +15,7 @@
  * 
  * @since    1.2
  */
-class WPML_Movies_Widget extends WPML_Widget {
+class WPMOLY_Movies_Widget extends WPMOLY_Widget {
 
 	/**
 	 * Specifies the classname and description, instantiates the widget. No
@@ -25,8 +25,8 @@ class WPML_Movies_Widget extends WPML_Widget {
 
 		$this->widget_name        = __( 'WPMovieLibrary Movies', 'wpmovielibrary' );
 		$this->widget_description = __( 'Display a list of movies from a specific taxonomy, media, status, rating…', 'wpmovielibrary' );
-		$this->widget_css         = 'wpml-widget wpml-movies-widget wpml-movies';
-		$this->widget_id          = 'wpmovielibrary_movies_widget';
+		$this->widget_css         = 'wpmoly movies';
+		$this->widget_id          = 'wpmovielibrary-movies-widget';
 		$this->widget_form        = 'movies-widget/movies-admin.php';
 
 		$this->widget_params      = array(
@@ -53,6 +53,30 @@ class WPML_Movies_Widget extends WPML_Widget {
 			'select_rating' =>  array(
 				'type' => 'select',
 				'std'  => 'all'
+			),
+			'select_meta' =>  array(
+				'type' => 'select',
+				'std'  => 'all'
+			),
+			'release_date' =>  array(
+				'type' => 'text',
+				'std'  => ''
+			),
+			'spoken_languages' =>  array(
+				'type' => 'text',
+				'std'  => ''
+			),
+			'production_companies' =>  array(
+				'type' => 'text',
+				'std'  => ''
+			),
+			'production_countries' =>  array(
+				'type' => 'text',
+				'std'  => ''
+			),
+			'certification' =>  array(
+				'type' => 'text',
+				'std'  => ''
 			),
 			'sort' =>  array(
 				'type' => 'select',
@@ -81,12 +105,28 @@ class WPML_Movies_Widget extends WPML_Widget {
 			'media'   => __( 'Media', 'wpmovielibrary' ),
 			'rating'  => __( 'Rating', 'wpmovielibrary' ),
 			'title'   => __( 'Title', 'wpmovielibrary' ),
-			'date'    => __( 'Date', 'wpmovielibrary' )
+			'date'    => __( 'Date', 'wpmovielibrary' ),
+			'meta'    => __( 'Metadata', 'wpmovielibrary' ),
+			'random'  => __( 'Random', 'wpmovielibrary' )
 		);
 
-		$this->status = WPML_Settings::get_available_movie_status();
-		$this->media  = WPML_Settings::get_available_movie_media();
-		$this->rating = WPML_Settings::get_available_movie_rating();
+		$this->status = WPMOLY_Settings::get_available_movie_status();
+		$this->media  = WPMOLY_Settings::get_available_movie_media();
+		$this->rating = WPMOLY_Settings::get_available_movie_rating();
+
+		$this->meta   = array(
+			'release_date'         => __( 'Release Date', 'wpmovielibrary' ),
+			'production_companies' => __( 'Production', 'wpmovielibrary' ),
+			'production_countries' => __( 'Country', 'wpmovielibrary' ),
+			'spoken_languages'     => __( 'Languages', 'wpmovielibrary' ),
+			'certification'        => __( 'Certification', 'wpmovielibrary' )
+		);
+
+		$this->years          = WPMOLY_Utils::get_used_years( $count = true );
+		$this->languages      = WPMOLY_Utils::get_used_languages( $count = true );
+		$this->companies      = WPMOLY_Utils::get_used_companies( $count = true );
+		$this->countries      = WPMOLY_Utils::get_used_countries( $count = true );
+		$this->certifications = WPMOLY_Utils::get_used_certifications( $count = true );
 
 		parent::__construct();
 	}
@@ -100,10 +140,15 @@ class WPML_Movies_Widget extends WPML_Widget {
 	public function widget( $args, $instance ) {
 
 		// Caching
-		$name = apply_filters( 'wpml_cache_name', 'movies_widget', $args );
+		$name = apply_filters( 'wpmoly_cache_name', 'movies_widget', $args );
 		// Naughty PHP 5.3 fix
 		$widget = &$this;
-		$content = WPML_Cache::output( $name, function() use ( $widget, $args, $instance ) {
+
+		// Skip caching if random
+		if ( isset( $args['orderby'] ) && 'random' == $args['orderby'] )
+			return $widget->widget_content( $args, $instance );
+
+		$content = WPMOLY_Cache::output( $name, function() use ( $widget, $args, $instance ) {
 
 			return $widget->widget_content( $args, $instance );
 		});
@@ -122,10 +167,12 @@ class WPML_Movies_Widget extends WPML_Widget {
 		extract( $args, EXTR_SKIP );
 		extract( $instance );
 
+		//print_r( $instance );
+
 		$title = apply_filters( 'widget_title', $title );
 
 		if ( 'no' != $show_poster )
-			$this->widget_css .= ' wpml-movies-with-thumbnail';
+			$this->widget_css .= ' wpmoly-movies-with-thumbnail';
 
 		if ( 'normal' == $show_poster )
 			$thumbnail = 'medium';
@@ -134,22 +181,46 @@ class WPML_Movies_Widget extends WPML_Widget {
 
 		switch ( $select ) {
 			case 'status':
-				$args = array( 'orderby' => 'meta_value', 'meta_key' => '_wpml_movie_status' );
+				$args = array( 'orderby' => 'meta_value', 'meta_key' => '_wpmoly_movie_status' );
 				if ( 'all' != $select_status )
 					$args['meta_value'] = $select_status;
 				break;
 			case 'media':
-				$args = array( 'orderby' => 'meta_value', 'meta_key' => '_wpml_movie_media' );
+				$args = array( 'orderby' => 'meta_value', 'meta_key' => '_wpmoly_movie_media' );
 				if ( 'all' != $select_media )
 					$args['meta_value'] = $select_media;
 				break;
 			case 'rating':
-				$args = array( 'orderby' => 'meta_value_num', 'meta_key' => '_wpml_movie_rating' );
+				$args = array( 'orderby' => 'meta_value_num', 'meta_key' => '_wpmoly_movie_rating' );
 				if ( 'all' != $select_rating )
 					$args['meta_value'] = $select_rating;
 				break;
 			case 'title':
 				$args = array( 'orderby' => 'title' );
+				break;
+			case 'random':
+				$args = array( 'orderby' => 'rand' );
+				break;
+			case 'meta':
+				switch ( $select_meta ) {
+					case 'release_date':
+					case 'production_companies':
+					case 'production_countries':
+					case 'spoken_languages':
+					case 'certification':
+						$args = array(
+							'meta_query' => array(
+								array(
+									'key'     => "_wpmoly_movie_{$select_meta}",
+									'value'   => $instance[ $select_meta ],
+									'compare' => 'LIKE'
+								)
+							),
+						);
+						break;
+					default:
+						break;
+				}
 				break;
 			case 'date':
 			default:
@@ -181,10 +252,10 @@ class WPML_Movies_Widget extends WPML_Widget {
 				'attr_title'  => sprintf( __( 'Permalink for &laquo; %s &raquo;', 'wpmovielibrary' ), $movie->post_title ),
 				'title'       => $movie->post_title,
 				'link'        => get_permalink( $movie->ID ),
-				'rating'      => get_post_meta( $movie->ID, '_wpml_movie_rating', true ),
+				'rating'      => wpmoly_get_movie_meta( $movie->ID, 'rating' ),
 				'thumbnail'   => get_the_post_thumbnail( $movie->ID, $thumbnail )
 			);
-			$item['rating_str'] = ( '' == $item['rating'] ? "stars_0_0" : 'stars_' . str_replace( '.', '_', $item['rating'] ) );
+			$item['_rating'] = apply_filters( 'wpmoly_movie_rating_stars', $item['rating'], $movie->ID, $base = 5 );
 			$items[] = $item;
 		}
 
@@ -193,5 +264,4 @@ class WPML_Movies_Widget extends WPML_Widget {
 
 		return $before_widget . $before_title . $title . $after_title . $html . $after_widget;
 	}
-
 }

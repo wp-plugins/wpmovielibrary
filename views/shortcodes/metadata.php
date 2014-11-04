@@ -10,4 +10,4 @@
  */
 ?>
 
-	<span class="wpml_shortcode_span wpml_movie_<?php echo $key ?>"><?php echo $meta ?></span>
+	<span class="wpmoly shortcode item meta <?php echo $key ?> value"><?php echo $meta ?></span>

@@ -16,7 +16,7 @@
  * 
  * @since    1.2
  */
-class WPML_Taxonomies_Widget extends WPML_Widget {
+class WPMOLY_Taxonomies_Widget extends WPMOLY_Widget {
 
 	/**
 	 * Specifies the classname and description, instantiates the widget. No
@@ -26,8 +26,8 @@ class WPML_Taxonomies_Widget extends WPML_Widget {
 
 		$this->widget_name        = __( 'WPMovieLibrary Taxonomies', 'wpmovielibrary' );
 		$this->widget_description = __( 'Display a list of terms from a specific taxonomy: collections, genres or actors.', 'wpmovielibrary' );
-		$this->widget_css         = 'wpmovielibrary wpml-widget wpml-taxonomies-widget';
-		$this->widget_id          = 'wpmovielibrary_taxonomies_widget';
+		$this->widget_css         = 'wpmoly taxonomies';
+		$this->widget_id          = 'wpmovielibrary-taxonomies-widget';
 		$this->widget_form        = 'taxonomies-widget/taxonomies-admin.php';
 
 		$this->widget_params      = array(
@@ -51,13 +51,21 @@ class WPML_Taxonomies_Widget extends WPML_Widget {
 				'type' => 'checkbox',
 				'std' => 0
 			),
+			'orderby' =>  array(
+				'type' => 'select',
+				'std'  => 'count'
+			),
+			'order' =>  array(
+				'type' => 'select',
+				'std'  => 'DESC'
+			),
 			'css' => array(
 				'type' => 'checkbox',
 				'std' => 0
 			),
 			'limit' => array(
 				'type' => 'number',
-				'std' => WPML_MAX_TAXONOMY_LIST
+				'std' => WPMOLY_MAX_TAXONOMY_LIST
 			)
 		);
 
@@ -95,10 +103,10 @@ class WPML_Taxonomies_Widget extends WPML_Widget {
 	public function widget( $args, $instance ) {
 
 		// Caching
-		$name = apply_filters( 'wpml_cache_name', 'taxonomies_widget', $args );
+		$name = apply_filters( 'wpmoly_cache_name', 'taxonomies_widget', $args );
 		// Naughty PHP 5.3 fix
 		$widget = &$this;
-		$content = WPML_Cache::output( $name, function() use ( $widget, $args, $instance ) {
+		$content = WPMOLY_Cache::output( $name, function() use ( $widget, $args, $instance ) {
 
 			return $widget->widget_content( $args, $instance );
 		});
@@ -125,21 +133,27 @@ class WPML_Taxonomies_Widget extends WPML_Widget {
 		extract( $instance );
 
 		$title = apply_filters( 'widget_title', $title );
-		$archive = call_user_func( "WPML_Settings::taxonomies__{$taxonomy}_rewrite" );
+		$archive = wpmoly_o( "rewrite-{$taxonomy}" );
 
-		$args = '';
+		if ( 'ASC' != $order )
+			$order = 'DESC';
+		if ( 'name' != $orderby )
+			$orderby = 'count';
+
+		$args = array( "order={$order}", "orderby={$orderby}" );
 		if ( 0 < $limit )
-			$args = 'order=DESC&orderby=count&number=' . $limit;
+			$args[] = "number={$limit}";
 
+		$args = implode( '&', $args );
 		$taxonomies = get_terms( array( $taxonomy ), $args );
 
 		if ( $taxonomies && ! is_wp_error( $taxonomies ) ) {
 
 			$items = array();
-			$this->widget_css .= " wpml-widget wpml-{$taxonomy}-list";
+			$this->widget_css .= " $taxonomy list";
 
 			if ( $css )
-				$this->widget_css .= ' wpml-list custom';
+				$this->widget_css .= ' custom';
 
 			foreach ( $taxonomies as $term )
 				$items[] = array(
@@ -151,11 +165,11 @@ class WPML_Taxonomies_Widget extends WPML_Widget {
 			if ( $limit )
 				$items[] = array(
 					'attr_title'  => $this->taxonomies[ $taxonomy ]['view_all'],
-					'link'        => home_url( '/' . $archive ),
+					'link'        => WPMOLY_L10n::get_taxonomy_permalink( $archive, $value = false ),
 					'title'       => __( 'View the complete list', 'wpmovielibrary' )
 				);
 
-			$items = apply_filters( 'wpml_widget_collection_list', $items, $list, $css );
+			$items = apply_filters( 'wpmoly_widget_collection_list', $items, $list, $css );
 			$attributes = array( 'items' => $items, 'description' => $description, 'default_option' => $this->taxonomies[ $taxonomy ]['default'], 'style' => $this->widget_css );
 
 			if ( $list )

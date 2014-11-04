@@ -17,11 +17,7 @@ if ( ! class_exists( 'WPMovieLibrary' ) ) :
 	* @package WPMovieLibrary
 	* @author  Charlie MERLAND <charlie@caercam.org>
 	*/
-	class WPMovieLibrary extends WPML_Module {
-
-		protected static $readable_properties  = array();
-
-		protected static $writeable_properties = array();
+	class WPMovieLibrary extends WPMOLY_Module {
 
 		protected $modules;
 
@@ -31,28 +27,30 @@ if ( ! class_exists( 'WPMovieLibrary' ) ) :
 		 * Initialize the plugin by setting localization and loading public scripts
 		 * and styles.
 		 *
-		 * @since     1.0.0
+		 * @since    1.0
 		 */
 		protected function __construct() {
 
 			$this->register_hook_callbacks();
 
 			$this->modules = array(
-				'WPML_Settings'    => WPML_Settings::get_instance(),
-				'WPML_Cache'       => WPML_Cache::get_instance(),
-				'WPML_Utils'       => WPML_Utils::get_instance(),
-				'WPML_Movies'      => WPML_Movies::get_instance(),
-				'WPML_Collections' => WPML_Collections::get_instance(),
-				'WPML_Genres'      => WPML_Genres::get_instance(),
-				'WPML_Actors'      => WPML_Actors::get_instance(),
-				'WPML_Shortcodes'  => WPML_Shortcodes::get_instance(),
+				'WPMOLY_Settings'    => WPMOLY_Settings::get_instance(),
+				'WPMOLY_Cache'       => WPMOLY_Cache::get_instance(),
+				'WPMOLY_L10n'        => WPMOLY_L10n::get_instance(),
+				'WPMOLY_Utils'       => WPMOLY_Utils::get_instance(),
+				'WPMOLY_Movies'      => WPMOLY_Movies::get_instance(),
+				'WPMOLY_Collections' => WPMOLY_Collections::get_instance(),
+				'WPMOLY_Genres'      => WPMOLY_Genres::get_instance(),
+				'WPMOLY_Actors'      => WPMOLY_Actors::get_instance(),
+				'WPMOLY_Shortcodes'  => WPMOLY_Shortcodes::get_instance(),
+				'WPMOLY_Legacy'      => WPMOLY_Legacy::get_instance()
 			);
 
 			$this->widgets = array(
-				'WPML_Statistics_Widget',
-				'WPML_Taxonomies_Widget',
-				'WPML_Details_Widget',
-				'WPML_Movies_Widget'
+				'WPMOLY_Statistics_Widget',
+				'WPMOLY_Taxonomies_Widget',
+				'WPMOLY_Details_Widget',
+				'WPMOLY_Movies_Widget'
 			);
 
 		}
@@ -63,9 +61,6 @@ if ( ! class_exists( 'WPMovieLibrary' ) ) :
 		 * @since    1.0
 		 */
 		public function register_hook_callbacks() {
-
-			// Load plugin text domain
-			add_action( 'plugins_loaded', array( $this, 'load_plugin_textdomain' ) );
 
 			// Widgets
 			add_action( 'widgets_init', array( $this, 'register_widgets' ) );
@@ -87,10 +82,10 @@ if ( ! class_exists( 'WPMovieLibrary' ) ) :
 		/**
 		 * Fired when the plugin is activated.
 		 * 
-		 * Restore previously converted contents. If WPML was previously
+		 * Restore previously converted contents. If WPMOLY was previously
 		 * deactivated or uninstalled using the 'convert' option, Movies and
 		 * Custom Taxonomies should still be in the database. If they are, we
-		 * convert them back to WPML contents.
+		 * convert them back to WPMOLY contents.
 		 * 
 		 * Call Movie Custom Post Type and Collections, Genres and Actors custom
 		 * Taxonomies' registering functions and flush rewrite rules to update
@@ -129,7 +124,7 @@ if ( ! class_exists( 'WPMovieLibrary' ) ) :
 		/**
 		 * Fired when the plugin is deactivated.
 		 * 
-		 * When deactivatin/uninstalling WPML, adopt different behaviors depending
+		 * When deactivatin/uninstalling WPMOLY, adopt different behaviors depending
 		 * on user options. Movies and Taxonomies can be kept as they are,
 		 * converted to WordPress standars or removed. Default is conserve on
 		 * deactivation, convert on uninstall.
@@ -140,7 +135,6 @@ if ( ! class_exists( 'WPMovieLibrary' ) ) :
 
 			foreach ( $this->modules as $module )
 				$module->deactivate();
-
 		}
 
 		/**
@@ -178,7 +172,9 @@ if ( ! class_exists( 'WPMovieLibrary' ) ) :
 		 */
 		public function enqueue_styles() {
 
-			wp_enqueue_style( WPML_SLUG, WPML_URL . '/assets/css/public.css', array(), WPML_VERSION );
+			wp_enqueue_style( WPMOLY_SLUG, WPMOLY_URL . '/assets/css/public/wpmoly.css', array(), WPMOLY_VERSION );
+			wp_enqueue_style( WPMOLY_SLUG . '-flags', WPMOLY_URL . '/assets/css/public/wpmoly-flags.css', array(), WPMOLY_VERSION );
+			wp_enqueue_style( WPMOLY_SLUG . '-font', WPMOLY_URL . '/assets/fonts/wpmovielibrary/style.css', array(), WPMOLY_VERSION );
 		}
 
 		/**
@@ -188,22 +184,7 @@ if ( ! class_exists( 'WPMovieLibrary' ) ) :
 		 */
 		public function enqueue_scripts() {
 
-			wp_enqueue_script( WPML_SLUG, WPML_URL . '/assets/js/public.js', array( 'jquery' ), WPML_VERSION, true );
-		}
-
-		/**
-		 * Load the plugin text domain for translation.
-		 *
-		 * @since    1.0
-		 */
-		public function load_plugin_textdomain() {
-
-			$domain = 'wpmovielibrary';
-			$locale = apply_filters( 'plugin_locale', get_locale(), $domain );
-
-			load_textdomain( $domain, WPML_PATH . '/' . $domain . '-' . $locale . '.mo' );
-			load_plugin_textdomain( $domain, FALSE, basename( plugin_dir_path( dirname( __FILE__ ) ) ) . '/languages/' );
-
+			wp_enqueue_script( WPMOLY_SLUG, WPMOLY_URL . '/assets/js/public/wpmoly.js', array( 'jquery' ), WPMOLY_VERSION, true );
 		}
 
 		/**
@@ -232,26 +213,20 @@ if ( ! class_exists( 'WPMovieLibrary' ) ) :
 		 */
 		public function admin_bar_menu() {
 
+			if ( ! current_user_can( 'manage_options' ) )
+				return false;
+
 			global $wp_admin_bar;
+			$admin_bar_menu = WPMOLY_Settings::get_admin_bar_menu();
 
-			$args = array(
-				'id'    => 'wpmovielibrary',
-				'title' => __( 'New Movie', 'wpmovielibrary' ),
-				'href'  => admin_url( 'post-new.php?post_type=movie' ),
-				'meta'  => array(
-					'title' => __( 'New Movie', 'wpmovielibrary' )
-				)
-			);
+			$wp_admin_bar->add_menu( $admin_bar_menu['menu'] );
 
-			// Dashicons or PNG
-			if ( version_compare( get_bloginfo( 'version' ), '3.8', '<' ) ) {
-				$args['title'] = '<img src="' . WPML_URL . '/assets/img/legacy/icon-movie.png" alt="" />' . $args['title'];
-			}
-			else {
-				$args['meta']['class'] = 'haz-dashicon';
-			}
+			foreach ( $admin_bar_menu['submenu'] as $menu )
+				if ( ! isset( $menu['condition'] ) || ( isset( $menu['condition'] ) && false != $menu['condition'] ) )
+					$wp_admin_bar->add_menu( $menu );
 
-			$wp_admin_bar->add_menu( $args );
+			foreach ( $admin_bar_menu['group'] as $group )
+				$wp_admin_bar->add_group( $group );
 		}
 
 		/**
@@ -277,7 +252,6 @@ if ( ! class_exists( 'WPMovieLibrary' ) ) :
 			else {
 				self::_uninstall();
 			}
-
 		}
 
 		/**
@@ -287,12 +261,12 @@ if ( ! class_exists( 'WPMovieLibrary' ) ) :
 		 */
 		private static function _uninstall() {
 
-			WPML_Utils::uninstall();
-			WPML_Movies::uninstall();
-			WPML_Collections::uninstall();
-			WPML_Genres::uninstall();
-			WPML_Actors::uninstall();
-			WPML_Settings::uninstall();
+			WPMOLY_Utils::uninstall();
+			WPMOLY_Movies::uninstall();
+			WPMOLY_Collections::uninstall();
+			WPMOLY_Genres::uninstall();
+			WPMOLY_Actors::uninstall();
+			WPMOLY_Settings::uninstall();
 		}
 
 		/**
@@ -300,8 +274,7 @@ if ( ! class_exists( 'WPMovieLibrary' ) ) :
 		 *
 		 * @since    1.0
 		 */
-		public function init() {
-		}
+		public function init() {}
 
 	}
 endif;
