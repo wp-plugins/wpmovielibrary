@@ -1165,7 +1165,12 @@ if ( ! class_exists( 'WPMOLY_Movies' ) ) :
 
 			global $wpdb;
 
-			$contents = $wpdb->get_results( "SELECT DISTINCT post_id FROM {$wpdb->postmeta} WHERE meta_key IN ('_wpml_content_type', '_wpmoly_content_type') AND meta_value='movie'" );
+			$contents = $wpdb->get_results(
+				"SELECT DISTINCT post_id
+				   FROM {$wpdb->postmeta}
+				  WHERE meta_key IN ('_wpml_content_type', '_wpmoly_content_type')
+				    AND meta_value='movie'"
+			);
 
 			foreach ( $contents as $p ) {
 				set_post_type( $p->post_id, 'movie' );

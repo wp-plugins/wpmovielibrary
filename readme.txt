@@ -4,7 +4,7 @@ Donate link: http://wpmovielibrary.com/contribute/#donate
 Tags: movie, movies, movie database, movie library, movie collection, cinema, movie genre, actor, actor, movie image, movie poster, movie meta, movie metadata, tmdb
 Requires at least: 3.8
 Tested up to: 4.0
-Stable tag: 2.0
+Stable tag: 2.0.1
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
@@ -53,19 +53,19 @@ Short list of supported features:
 Want to extend WPMovieLibrary? Additionnal extensions are available on [WPMovieLibrary/Extensions](http://wpmovielibrary.com/extensions/)
 
 = Get involved =
-Developers and Translators can contribute to the source code on the [GitHub Repository](https://github.com/wpmovielibrary/wpmovielibrary/).
+Developers and Translators can contribute to the source code on the [GitHub Repository](https://github.com/CaerCam/wpmovielibrary/).
 
 = Links =
 
 *    [Official website](http://wpmovielibrary.com/)
 *    [Documentation](http://wpmovielibrary.com/documentation/)
-*    [Development](https://github.com/wpmovielibrary/wpmovielibrary/)
+*    [Development](https://github.com/CaerCam/wpmovielibrary/)
 
 == Installation ==
 
 = Minimum Requirements =
 
-* WordPress 3.8 or greater
+* WordPress 3.9 or greater
 * PHP version 5.4 or greater
 * MySQL version 5.0 or greater
 
@@ -114,6 +114,10 @@ Your theme/plugin/widget most likely doesn't support Custom Post Types; open a t
 7. Import queue
 
 == Changelog ==
+
+= 2.0.1 =
+* Tweak - Add some responsive to editor metabox
+* Fix - Few activation/deactivation missing tweaks
 
 = 2.0 =
 * Feature - Complete reboot of Settings
@@ -226,7 +230,6 @@ Your theme/plugin/widget most likely doesn't support Custom Post Types; open a t
 = 1.0 =
 * First stable release
 
-== Upgrade Notice ==
-
-= 2.0 =
-WPMovieLibrary 2.0 is a major update. Test your templates and themes prior to updating, see that extensions are up to date and 2.0 compatible, and be sure to make backups of your database and file before updating. Reading the [release notes](http://wpmovielibrary.com/development/release-notes/#version-1.3) is a good idea too.
+== Upgrade notice ==
+= 1.3 =
+WPMovieLibrary 1.3 is a major update. Test extensions and your theme prior to updating, see that extensions are up to date and 1.3 compatible, and be sure to keep backups of your databases. Reading the [release notes](http://wpmovielibrary.com/development/release-notes/#version-1.3) is a good idea too.
