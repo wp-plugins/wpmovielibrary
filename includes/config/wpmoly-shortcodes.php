@@ -22,13 +22,18 @@ $wpmoly_shortcodes = array(
 				'values'  => 'boolean',
 				'filter'  => 'esc_attr'
 			),
+			'order' => array(
+				'default' => wpmoly_o( 'movie-archives-movies-order' ),
+				'values'  => array( 'ASC', 'DESC' ),
+				'filter'  => 'esc_attr'
+			),
 			'number' => array(
-				'default' => -1,
+				'default' => wpmoly_o( 'movie-archives-movies-per-page' ),
 				'values'  => null,
 				'filter'  => 'intval'
 			),
 			'columns' => array(
-				'default' => 4,
+				'default' => wpmoly_o( 'movie-archives-grid-columns' ),
 				'values'  => null,
 				'filter'  => 'intval'
 			),
@@ -99,6 +104,11 @@ $wpmoly_shortcodes = array(
 				'default' => null,
 				'values'  => array( 'media', 'status', 'rating' ),
 				'filter'  => null
+			),
+			'paginate' => array(
+				'default' => false,
+				'values'  => 'boolean',
+				'filter'  => 'esc_attr'
 			)
 		),
 		'content'  => null,
@@ -125,7 +135,7 @@ $wpmoly_shortcodes = array(
 			),
 			'meta' => array(
 				'default' => array( 'director', 'runtime', 'release_date', 'genres', 'actors', 'overview' ),
-				'values'  => array( 'director', 'runtime', 'release_date', 'genres', 'actors', 'overview', 'title', 'original_title', 'production', 'country', 'language', 'producer', 'photography', 'composer', 'author', 'writer' ),
+				'values'  => array( 'director', 'runtime', 'release_date', 'genres', 'actors', 'overview', 'title', 'original_title', 'production', 'country', 'language', 'producer', 'photography', 'composer', 'author', 'writer', 'cast' ),
 				'filter'  => null
 			),
 			'details' => array(
@@ -153,7 +163,7 @@ $wpmoly_shortcodes = array(
 			),
 			'key' => array(
 				'default' => null,
-				'values'  => array( 'director', 'runtime', 'release_date', 'genres', 'actors', 'overview', 'title', 'original_title', 'production', 'country', 'language', 'producer', 'photography', 'composer', 'author', 'writer' ),
+				'values'  => array( 'director', 'runtime', 'release_date', 'genres', 'actors', 'cast', 'overview', 'title', 'original_title', 'production', 'country', 'language', 'producer', 'photography', 'composer', 'author', 'writer' ),
 				'filter'  => 'esc_attr'
 			),
 			'label' => array(

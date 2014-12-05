@@ -50,6 +50,11 @@
 	content: "\f126";
 }
 
+[class^="wpmolicon icon-"],
+[class*=" wpmolicon icon-"] {
+	font-family: "wpmovielibrary" !important;
+}
+
 .wpmolicon {
 	display: inline-block;
 	width: 20px;
@@ -76,6 +81,11 @@
 }
 .icon-bluray:before {
 	content: "\e64f";
+}
+
+#toplevel_page_wpmovielibrary .wp-menu-image.dashicons-before:before {
+	content: "\e62c";
+	font-family: 'wpmovielibrary' !important;
 }
 
 /* Rating

@@ -39,6 +39,12 @@ if ( ! class_exists( 'WPMOLY_Redux_Framework_config' ) ) {
 			if ( ! isset( $this->args['opt_name'] ) )
 				return;
 
+			add_filter( 'redux/options/' . $this->args['opt_name'] . '/field/wpmoly-headbox-title/register', array( $this, 'available_movie_tags' ), 10, 1 );
+			add_filter( 'redux/options/' . $this->args['opt_name'] . '/field/wpmoly-headbox-subtitle/register', array( $this, 'available_movie_tags' ), 10, 1 );
+			add_filter( 'redux/options/' . $this->args['opt_name'] . '/field/wpmoly-headbox-details-1/register', array( $this, 'available_movie_tags' ), 10, 1 );
+			add_filter( 'redux/options/' . $this->args['opt_name'] . '/field/wpmoly-headbox-details-2/register', array( $this, 'available_movie_tags' ), 10, 1 );
+			add_filter( 'redux/options/' . $this->args['opt_name'] . '/field/wpmoly-headbox-details-3/register', array( $this, 'available_movie_tags' ), 10, 1 );
+
 			// If Redux is running as a plugin, this will remove the demo notice and links
 			//add_action( 'redux/loaded', array( $this, 'remove_demo' ) );
 
@@ -145,6 +151,12 @@ if ( ! class_exists( 'WPMOLY_Redux_Framework_config' ) ) {
 			$this->args['help_sidebar'] = __( '<p>This is the sidebar content, HTML is allowed.</p>', 'wpmovielibrary' );
 		}
 
+		public function available_movie_tags( $field ) {
+
+			$field['options'] = WPMOLY_Settings::get_available_movie_tags();
+			return $field;
+		}
+
 		/**
 		* All the possible arguments for Redux.
 		* For full documentation on arguments, please refer to: https://github.com/ReduxFramework/ReduxFramework/wiki/Arguments
@@ -182,36 +194,6 @@ if ( ! class_exists( 'WPMOLY_Redux_Framework_config' ) ) {
 				'system_info'          => true,
 				'system_info_icon_class' => 'fa fa-wrench',
 				// REMOVE
-
-				// HINTS
-				'hints' => array(
-					'icon'          => 'icon-question-sign',
-					'icon_position' => 'right',
-					'icon_color'    => 'lightgray',
-					'icon_size'     => 'normal',
-					'tip_style'     => array(
-						'color'   => 'dark',
-						'shadow'  => false,
-						'rounded' => false,
-						'style'   => '',
-					),
-					'tip_position'  => array(
-						'my' => 'top center',
-						'at' => 'bottom center',
-					),
-					'tip_effect'    => array(
-						'show' => array(
-							'effect'   => '',
-							'duration' => '0',
-							'event'    => 'mouseover',
-						),
-						'hide' => array(
-							'effect'   => '',
-							'duration' => '0',
-							'event'    => 'click mouseleave',
-						),
-					),
-				)
 			);
 
 			// SOCIAL ICONS -> Setup custom links in the footer for quick links in your panel footer icons.
@@ -244,8 +226,8 @@ if ( ! class_exists( 'WPMOLY_Redux_Framework_config' ) ) {
 
 	}
 
-	global $reduxConfig;
-	$reduxConfig = new WPMOLY_Redux_Framework_config();
+	global $wpmoly_redux_config;
+	$wpmoly_redux_config = new WPMOLY_Redux_Framework_config();
 }
 else {
 	echo "The class named WPMOLY_Redux_Framework_config has already been called. <strong>Developers, you need to prefix this class with your company name or you'll run into problems!</strong>";

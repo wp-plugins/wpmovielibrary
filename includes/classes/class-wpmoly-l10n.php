@@ -190,6 +190,10 @@ if ( ! class_exists( 'WPMOLY_L10n' ) ) :
 			$actor      = wpmoly_o( 'rewrite-actor' );
 
 			$l10n_rules['movies'] = ( $translate && '' != $movies ? $movies : 'movies' );
+			$l10n_rules['collection'] = ( $translate && '' != $collection ? $collection : 'collection' );
+			$l10n_rules['genre'] = ( $translate && '' != $genre ? $genre : 'genre' );
+			$l10n_rules['actor'] = ( $translate && '' != $actor ? $actor : 'actor' );
+
 			$details = WPMOLY_Settings::get_supported_movie_details();
 			$meta    = WPMOLY_Settings::get_supported_movie_meta();
 
@@ -291,7 +295,7 @@ if ( ! class_exists( 'WPMOLY_L10n' ) ) :
 			if ( 'rating' == $key )
 				$meta_value = number_format( $value, 1, '.', '' );
 			else
-				$meta_value = self::filter_rewrites( $value );
+				$meta_value = self::filter_rewrites( __( ucwords( $value ), 'wpmovielibrary' ) );
 
 			global $wp_rewrite;
 			$url = '';
@@ -311,8 +315,6 @@ if ( ! class_exists( 'WPMOLY_L10n' ) ) :
 		/**
 		 * Generate Custom Taxonomies permalinks
 		 * 
-		 * TODO: use pages to display archives.
-		 * 
 		 * @since    1.0
 		 * 
 		 * @param    string    $taxonomy Taxonomy name
@@ -322,30 +324,20 @@ if ( ! class_exists( 'WPMOLY_L10n' ) ) :
 		 */
 		public static function get_taxonomy_permalink( $taxonomy, $value ) {
 
-			return $value;
+			$l10n_rewrite = self::get_l10n_rewrite();
 
-			/*$l10n_rewrite = self::get_l10n_rewrite();
+			$page_id = intval( wpmoly_o( "{$taxonomy}-archives" ) );
+			if ( ! $page_id || ! get_post( $page_id ) )
+				return $value;
 
-			$movies = wpmoly_o( 'rewrite-movie' );
-			if ( ! $movies )
-				$movies = 'movies';
-
-			$tax = wpmoly_o( "rewrite-{$taxonomy}" );
-			if ( ! $tax )
-				$tax = $taxonomy;
-
-			global $wp_rewrite;
-			if ( '' != $wp_rewrite->permalink_structure )
-				$url = home_url( "/{$movies}/{$tax}/" );
-			else
-				$url = home_url( "/index.php?movie={$tax}" );
+			$url = get_permalink( $page_id );
 
 			if ( false === $value )
 				return $url;
 
-			$permalink = sprintf( '<a href="%1$s" title="%2$s">%2$s</a>', $url, $value );
+			$permalink = sprintf( '<a href="%s" title="%s">%s</a>', $url, strip_tags( $value ), $value );
 
-			return $permalink;*/
+			return $permalink;
 		}
 
 		/**
@@ -390,6 +382,7 @@ if ( ! class_exists( 'WPMOLY_L10n' ) ) :
 				'load_more'		=> __( 'Load More', 'wpmovielibrary' ),
 				'loading_images'	=> __( 'Loading Images…', 'wpmovielibrary' ),
 				'media_no_movie'	=> __( 'No movie could be found. You need to select a movie before importing images or posters.', 'wpmovielibrary' ),
+				'metadata_saved'	=> __( 'Metadata saved!', 'wpmovielibrary' ),
 				'missing_meta'		=> __( 'No metadata could be found, please import metadata before queuing.', 'wpmovielibrary' ),
 				'movie'			=> __( 'Movie', 'wpmovielibrary' ),
 				'movie_updated'		=> _n( 'movie updated', 'movies updated', 0, 'wpmovielibrary' ),

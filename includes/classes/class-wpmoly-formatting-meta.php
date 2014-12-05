@@ -116,6 +116,9 @@ if ( ! class_exists( 'WPMOLY_Formatting_Meta' ) ) :
 			if ( is_null( $data ) || '' == $data )
 				return $data;
 
+			if ( '0' == $data )
+				return self::format_movie_field( __( 'Duration unknown', 'wpmovielibrary' ) );
+
 			if ( is_null( $format ) )
 				$format = wpmoly_o( 'format-time' );
 
@@ -362,6 +365,8 @@ if ( ! class_exists( 'WPMOLY_Formatting_Meta' ) ) :
 		public static function format_movie_budget( $data, $format = 'html' ) {
 
 			$output = intval( $data );
+			if ( ! $output )
+				return $output;
 
 			if ( 'html' != $format )
 				$format = 'raw';
@@ -386,6 +391,8 @@ if ( ! class_exists( 'WPMOLY_Formatting_Meta' ) ) :
 		public static function format_movie_revenue( $data, $format = 'html' ) {
 
 			$output = intval( $data );
+			if ( ! $output )
+				return $output;
 
 			if ( 'html' != $format )
 				$format = 'raw';
@@ -409,8 +416,31 @@ if ( ! class_exists( 'WPMOLY_Formatting_Meta' ) ) :
 		 */
 		public static function format_movie_adult( $data ) {
 
-			$output = apply_filters( 'wpmoly_movie_meta_link', 'adult', $data, 'meta' );
+			$status = array( 'true', 'false' );
+			$output = array( __( 'Yes', 'wpmovielibrary' ), __( 'No', 'wpmovielibrary' ) );
+
+			$output = str_replace( $status, $output, $data );
+			$output = apply_filters( 'wpmoly_movie_meta_link', 'adult', $output, 'meta' );
 			$output = self::format_movie_field( $output );
+
+			return $output;
+		}
+
+		/**
+		 * Format movie homepage link.
+		 * 
+		 * @since    2.0.3
+		 * 
+		 * @param    string    $data Homepage link
+		 * 
+		 * @return   string    Formatted output
+		 */
+		public static function format_movie_homepage( $data ) {
+
+			if ( '' != $data )
+				$data = sprintf( '<a href="%1$s" title="%2$s">%1$s</a>', $data, __( 'Official Website', 'wpmovielibrary' ) );
+
+			$output = self::format_movie_field( $data );
 
 			return $output;
 		}

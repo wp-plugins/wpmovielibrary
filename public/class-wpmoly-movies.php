@@ -25,6 +25,25 @@ if ( ! class_exists( 'WPMOLY_Movies' ) ) :
 		}
 
 		/**
+		 * Magic!
+		 * 
+		 * @since    2.0
+		 * 
+		 * @param    string    $name Called method name
+		 * @param    array     $arguments Called method arguments
+		 * 
+		 * @return   mixed    Callback function return value
+		 */
+		public static function __callStatic( $name, $arguments ) {
+
+			if ( false !== strpos( $name, 'get_movies_by_' ) ) {
+				$name = str_replace( 'get_movies_by_', '', $name );
+				array_unshift( $arguments, $name );
+				return call_user_func_array( __CLASS__ . '::get_movies_by_meta', $arguments );
+			}
+		}
+
+		/**
 		 * Register callbacks for actions and filters
 		 * 
 		 * @since    1.0
@@ -35,7 +54,13 @@ if ( ! class_exists( 'WPMOLY_Movies' ) ) :
 
 			// Load Movies as well as Posts in the Loop
 			add_action( 'pre_get_posts', __CLASS__ . '::show_movies_in_home_page', 10, 1 );
-			add_filter( 'pre_get_posts', __CLASS__ . '::filter_search_query', 11, 1 );
+
+			if ( '1' == wpmoly_o( 'search' ) ) {
+				add_filter( 'pre_get_posts', __CLASS__ . '::filter_search_query', 11, 1 );
+				add_filter( 'get_search_query', __CLASS__ . '::get_search_query', 11, 1 );
+			}
+
+			add_filter( 'pre_get_posts', __CLASS__ . '::filter_archives_query', 11, 1 );
 
 			// Movie content
 			add_filter( 'the_content', __CLASS__ . '::movie_content' );
@@ -45,9 +70,7 @@ if ( ! class_exists( 'WPMOLY_Movies' ) ) :
 			add_action( 'pre_get_posts', __CLASS__ . '::movies_query_meta', 10, 1 );
 			add_filter( 'query_vars', __CLASS__ . '::movies_query_vars', 10, 1 );
 
-			// TODO: is that useful anyway?
-			add_filter( 'wpmoly_get_movies_from_media', __CLASS__ . '::get_movies_from_media', 10, 1 );
-			add_filter( 'wpmoly_get_movies_from_status', __CLASS__ . '::get_movies_from_status', 10, 1 );
+			// debug
 			//add_filter( 'posts_request', __CLASS__ . '::posts_request', 10, 2 );
 		}
 
@@ -223,347 +246,12 @@ if ( ! class_exists( 'WPMOLY_Movies' ) ) :
 			if ( 'movie' != get_post_type() )
 				return $content;
 
-			if ( wpmoly_o( 'vintage-content' ) )
-				$headbox = self::movie_vintage_content( $content );
+			if ( ! wpmoly_o( 'vintage-content' ) )
+				$headbox = WPMOLY_Headbox::get_content( $content );
 			else
-				$headbox = self::movie_headbox_content( $content );
+				$headbox = self::movie_vintage_content( $content );
 
 			return $headbox . $content;
-		}
-
-		/** * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-		 *
-		 *                          Movie Headbox
-		 * 
-		 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-
-		/**
-		 * Show WPMOLY 2.0 modern metadata/details headbox content.
-		 *
-		 * @since    2.0
-		 * 
-		 * @param    string      $content The original post content
-		 *
-		 * @return   string      The filtered content containing original content plus movie infos if available, the untouched original content else.
-		 */
-		public static function movie_headbox_content( $content ) {
-
-			$theme = wp_get_theme();
-			if ( ! is_null( $theme->stylesheet ) )
-				$theme = 'theme-' . $theme->stylesheet;
-			else
-				$theme = '';
-
-			$id     = get_the_ID();
-			$poster = wp_get_attachment_image_src( get_post_thumbnail_id( $id ), 'full' );
-			$poster = $poster[0];
-			$movie  = array(
-				'poster' => $poster,
-				'rating' => apply_filters( 'wpmoly_movie_rating_stars', self::get_movie_meta( $id, 'rating' ) ),
-				'media'  => apply_filters( 'wpmoly_format_movie_media', self::get_movie_meta( $id, 'media' ), $format = 'html', $icon = true ),
-				'status' => apply_filters( 'wpmoly_format_movie_status', self::get_movie_meta( $id, 'status' ), $format = 'html', $icon = true ),
-				'year'   => apply_filters( 'wpmoly_format_movie_year', self::get_movie_meta( $id, 'release_date' ) )
-			);
-
-			$meta  = array( 'title', 'tagline', 'overview', 'genres', 'runtime' );
-			foreach ( $meta as $i => $m )
-				$movie[ $m ] = apply_filters( "wpmoly_format_movie_{$m}", self::get_movie_meta( $id, $m ) );
-
-			$attributes = array(
-				'id'    => get_the_ID(),
-				'movie' => $movie,
-				'menu'  => self::movie_headbox_menu(),
-				'tabs'  => self::movie_headbox_tabs(),
-				'theme' => $theme,
-			);
-			$content = WPMovieLibrary::render_template( 'movies/movie-headbox.php', $attributes, $require = 'always' );
-
-			return $content;
-		}
-
-		/**
-		 * Modern headbox menu.
-		 *
-		 * @since    2.0
-		 * 
-		 * @return   string    Headbox Menu HTML markup
-		 */
-		public static function movie_headbox_menu() {
-
-			$links = array(
-				'overview' => array(
-					'title' => __( 'Overview', 'wpmovielibrary' ),
-					'icon'  => 'overview'
-				),
-				'meta' => array(
-						'title' => __( 'Metadata', 'wpmovielibrary' ),
-						'icon'  => 'meta'
-					),
-				'details' => array(
-						'title' => __( 'Details', 'wpmovielibrary' ),
-						'icon'  => 'details'
-					),
-				'actors' => array(
-					'title' => __( 'Actors', 'wpmovielibrary' ),
-					'icon'  => 'actor'
-				),
-				'images' => array(
-					'title' => __( 'Images', 'wpmovielibrary' ),
-					'icon'  => 'images'
-				)
-			);
-
-			/**
-			 * Filter the Headbox menu links.
-			 * 
-			 * @since    2.0
-			 * 
-			 * @param    array    $links default menu links
-			 */
-			$links = apply_filters( 'wpmoly_filter_headbox_menu_link', $links );
-
-			$attributes = array(
-				'id'    => get_the_ID(),
-				'links' => $links
-			);
-			$content = WPMovieLibrary::render_template( 'movies/headbox/menu.php', $attributes, $require = 'always' );
-
-			return $content;
-		}
-
-		/**
-		 * Modern headbox tabs content.
-		 *
-		 * @since    2.0
-		 * 
-		 * @return   string    Headbox Tabs content HTML markup
-		 */
-		public static function movie_headbox_tabs() {
-
-			$tabs = array(
-				'overview' => array(
-					'title'   => __( 'Overview', 'wpmovielibrary' ),
-					'icon'    => 'overview',
-					'content' => self::movie_headbox_overview_tab()
-				),
-				'meta' => array(
-					'title'   => __( 'Metadata', 'wpmovielibrary' ),
-					'icon'    => 'meta',
-					'content' => self::movie_headbox_meta_tab()
-				),
-				'details' => array(
-					'title'   => __( 'Details', 'wpmovielibrary' ),
-					'icon'    => 'details',
-					'content' => self::movie_headbox_details_tab()
-				),
-				'actors' => array(
-					'title'   => __( 'Actors', 'wpmovielibrary' ),
-					'icon'    => 'actor',
-					'content' => self::movie_headbox_actors_tab()
-				),
-				'images' => array(
-					'title'   => __( 'Images', 'wpmovielibrary' ),
-					'icon'    => 'images',
-					'content' => self::movie_headbox_images_tab()
-				)
-			);
-
-			/**
-			 * Filter the Headbox tabs.
-			 * 
-			 * @since    2.0
-			 * 
-			 * @param    array    $tabs default headbox tabs
-			 */
-			$tabs = apply_filters( 'wpmoly_filter_headbox_menu_tabs', $tabs );
-
-			$attributes = array(
-				'id'   => get_the_ID(),
-				'tabs' => $tabs
-			);
-			$content = WPMovieLibrary::render_template( 'movies/headbox/tabs.php', $attributes, $require = 'always' );
-
-			return $content;
-		}
-
-		/**
-		 * Modern headbox overview tab content callback.
-		 * 
-		 * @since    2.0
-		 * 
-		 * @return   string    Tab content HTML markup
-		 */
-		public static function movie_headbox_overview_tab() {
-
-			$attributes = array(
-				'overview' => wpmoly_get_movie_meta( get_the_ID(), 'overview' )
-			);
-
-			$content = WPMovieLibrary::render_template( 'movies/headbox/tabs/overview.php', $attributes, $require = 'always' );
-
-			return $content;
-		}
-
-		/**
-		 * Modern headbox meta tab content callback.
-		 * 
-		 * @since    2.0
-		 * 
-		 * @return   string    Tab content HTML markup
-		 */
-		public static function movie_headbox_meta_tab() {
-
-			// TODO: better filtering/formatting
-			$metadata = wpmoly_get_movie_meta();
-			$metadata = wpmoly_filter_undimension_array( $metadata );
-
-			$fields = wpmoly_o( 'sort-meta' );
-			$default_fields = WPMOLY_Settings::get_supported_movie_meta();
-
-			if ( '' == $metadata || empty( $fields ) || ! isset( $fields['used'] ) )
-				return null;
-
-			$fields = $fields['used'];
-			if ( isset( $fields['placebo'] ) )
-				unset( $fields['placebo'] );
-			unset( $fields['cast'], $fields['overview'], $fields['genres'] );
-
-			$items = array();
-
-			foreach ( $fields as $slug => $field ) {
-
-				$_field = $metadata[ $slug ];
-
-				// Custom filter if available
-				if ( has_filter( "wpmoly_format_movie_{$slug}" ) )
-					$_field = apply_filters( "wpmoly_format_movie_{$slug}", $_field );
-
-				// Filter empty field
-				$_field = apply_filters( "wpmoly_format_movie_field", $_field );
-
-				$fields[ $slug ] = $_field;
-				$items[] = array( 'slug' => $slug, 'title' => __( $default_fields[ $slug ]['title'], 'wpmovielibrary' ), 'value' => $_field );
-			}
-
-			$attributes = array(
-				'meta' => $items
-			);
-
-			$content = WPMovieLibrary::render_template( 'movies/headbox/tabs/meta.php', $attributes, $require = 'always' );
-
-			return $content;
-		}
-
-		/**
-		 * Modern headbox details tab content callback.
-		 * 
-		 * @since    2.0
-		 * 
-		 * @return   string    Tab content HTML markup
-		 */
-		public static function movie_headbox_details_tab() {
-
-			// TODO: better filtering/formatting
-			$fields = wpmoly_o( 'sort-details' );
-			$default_fields = WPMOLY_Settings::get_supported_movie_details();
-
-			if ( empty( $fields ) || ! isset( $fields['used'] ) )
-				return null;
-
-			$fields = $fields['used'];
-			if ( isset( $fields['placebo'] ) )
-				unset( $fields['placebo'] );
-			$post_id = get_the_ID();
-
-			$items = array();
-
-			foreach ( $fields as $slug => $field ) {
-
-				$detail = call_user_func_array( 'wpmoly_get_movie_meta', array( 'post_id' => $post_id, 'meta' => $slug ) );
-				if ( ! is_array( $detail ) )
-					$detail = array( $detail );
-
-				foreach ( $detail as $i => $d ) {
-					if ( '' != $d )
-						$d = $default_fields[ $slug ]['options'][ $d ];
-					$detail[ $i ] = apply_filters( "wpmoly_format_movie_field", $d );
-				}
-
-				$title = '';
-				if ( isset( $default_fields[ $slug ] ) )
-					$title = __( $default_fields[ $slug ]['title'], 'wpmovielibrary' );
-
-				$items[] = array( 'slug' => $slug, 'title' => $title, 'value' => $detail );
-			}
-
-			$attributes = array(
-				'details' => $items
-			);
-
-			$content = WPMovieLibrary::render_template( 'movies/headbox/tabs/details.php', $attributes, $require = 'always' );
-
-			return $content;
-		}
-
-		/**
-		 * Modern headbox actors tab content callback.
-		 * 
-		 * @since    2.0
-		 * 
-		 * @return   string    Tab content HTML markup
-		 */
-		public static function movie_headbox_actors_tab() {
-
-			$actors = wpmoly_get_movie_meta( get_the_ID(), 'cast' );
-			$actors = apply_filters( 'wpmoly_format_movie_actors', $actors );
-
-			$attributes = array(
-				'actors' => $actors
-			);
-
-			$content = WPMovieLibrary::render_template( 'movies/headbox/tabs/actors.php', $attributes, $require = 'always' );
-
-			return $content;
-		}
-
-		/**
-		 * Modern headbox images tab content callback.
-		 * 
-		 * @since    2.0
-		 * 
-		 * @return   string    Tab content HTML markup
-		 */
-		public static function movie_headbox_images_tab() {
-
-			$attachments = get_posts( array(
-				'post_type'   => 'attachment',
-				'orderby'     => 'title',
-				'numberposts' => -1,
-				'post_status' => null,
-				'post_parent' => get_the_ID(),
-				'exclude'     => get_post_thumbnail_id( get_the_ID() )
-			) );
-			$images = array();
-			$content = __( 'No images were imported for this movie.', 'wpmovielibrary' );
-			
-			if ( $attachments ) {
-
-				foreach ( $attachments as $attachment )
-					$images[] = array(
-						'thumbnail' => wp_get_attachment_image_src( $attachment->ID, 'thumbnail' ),
-						'full'      => wp_get_attachment_image_src( $attachment->ID, 'full' )
-					);
-
-				$content = WPMovieLibrary::render_template( 'shortcodes/images.php', array( 'size' => 'thumbnail', 'movie_id' => get_the_ID(), 'images' => $images ), $require = 'always' );
-			}
-
-			$attributes = array(
-				'images' => $content
-			);
-
-			$content = WPMovieLibrary::render_template( 'movies/headbox/tabs/images.php', $attributes, $require = 'always' );
-
-			return $content;
 		}
 
 		/** * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -768,34 +456,9 @@ if ( ! class_exists( 'WPMOLY_Movies' ) ) :
 			if ( false != $value )
 				$meta_value = $value;
 
-			// Year is just a part of release date but can be useful
-			if ( 'year' == $meta_key ) {
-				$key   = '_wpmoly_movie_release_date';
-				$value = $meta_value;
-			}
-			else if ( 'rating' == $meta_key ) {
-				$key   = '_wpmoly_movie_rating';
-				$value = number_format( $meta_value, 1, '.', '');
-			}
-			else {
-				$key   = "_wpmoly_movie_{$meta_key}";
-				$value = $meta_value;
-			}
+			$meta_query = call_user_func( "WPMOLY_Search::by_{$meta_key}", $meta_value );
 
-			$wp_query->set( 'meta_query', array(
-					'relation' => 'OR',
-					array(
-						'key'     => $key,
-						'value'   => $value,
-						'compare' => 'LIKE'
-					),
-					array(
-						'key'     => $key,
-						'value'   => str_replace( '-', ' ', $value ),
-						'compare' => 'LIKE'
-					)
-				)
-			);
+			$wp_query->set( 'meta_query', $meta_query );
 		}
 
 		/**
@@ -812,6 +475,9 @@ if ( ! class_exists( 'WPMOLY_Movies' ) ) :
 			$q_var[] = 'meta';
 			$q_var[] = 'value';
 			$q_var[] = 'letter';
+			$q_var[] = 'number';
+			$q_var[] = 'columns';
+			$q_var[] = '_page';
 			return $q_var;
 		}
 
@@ -824,9 +490,9 @@ if ( ! class_exists( 'WPMOLY_Movies' ) ) :
 		 * 
 		 * @since    2.0
 		 * 
-		 * @param    object    WP_Query object
+		 * @param    object    $wp_query WP_Query object
 		 * 
-		 * @return   object    WP_Query object
+		 * @return   object    $wp_query WP_Query object
 		 */
 		public static function filter_search_query( $wp_query ) {
 
@@ -836,7 +502,7 @@ if ( ! class_exists( 'WPMOLY_Movies' ) ) :
 			global $wpdb;
 
 			$like = $wp_query->query['s'];
-			$like = ( method_exists( 'wpdb', 'esc_like' ) ? $wpdb->esc_like( $like ) : like_escape( $like ) );
+			$like = wpmoly_esc_like( $like );
 			$like = '%' . str_replace( ' ', '%', $like ) . '%';
 			$query = $wpdb->prepare(
 				"SELECT DISTINCT post_id FROM {$wpdb->postmeta}
@@ -859,104 +525,207 @@ if ( ! class_exists( 'WPMOLY_Movies' ) ) :
 				$ids[] = $result->post_id;
 
 			unset( $wp_query->query );
+			$wp_query->set( 'wpmoly_search', $wp_query->get( 's' ) );
 			$wp_query->set( 's', null );
-			$wp_query->set( 'post_type', array( 'post', 'movie' ) );
+			$wp_query->set( 'post_type', array( 'post', 'page', 'movie' ) );
 			$wp_query->set( 'post__in', $ids );
 
 			return $wp_query;
 		}
 
 		/**
-		 * Filter Hook
+		 * Replace empty search query by the plugin filtered search query.
 		 * 
-		 * Used to get a list of Movies depending on their Media
+		 * @since    2.1
 		 * 
-		 * @since    1.0
+		 * @param    string    $s Search query
 		 * 
-		 * @param    string    Media slug
-		 * 
-		 * @return   array     Array of Post objects
+		 * @return   string    $s WPMOLY Search query
 		 */
-		public static function get_movies_from_media( $media = null ) {
+		public static function get_search_query( $s ) {
 
-			$media = esc_attr( $media );
+			if ( is_admin() || ! is_search() || '' != $s )
+				return $s;
 
-			// Caching
-			$name = apply_filters( 'wpmoly_cache_name', 'movie_from_media', $media );
-			$movies = WPMOLY_Cache::output( $name, function() use ( $media ) {
-				$allowed = WPMOLY_Settings::get_available_movie_media();
-				$allowed = array_keys( $allowed );
+			global $wp_query;
 
-				if ( is_null( $media ) || ! in_array( $media, $allowed ) )
-					$media = WPMOLY_Settings::get_default_movie_media();
+			$search = $wp_query->get( 'wpmoly_search' );
+			if( '' != $search );
+				$s = $search;
 
-				$args = array(
-					'post_type' => 'movie',
-					'post_status' => 'publish',
-					'posts_per_page' => -1,
-					'meta_query' => array(
-						array(
-							'key'   => '_wpmoly_movie_media',
-							'value' => $media
-						)
-					)
-				);
-				
-				$query = new WP_Query( $args );
-				$movies = $query->posts;
+			return $s;
+		}
 
-				return $movies;
+		/**
+		 * Add movie post_type to archives WP_Query
+		 * 
+		 * @since    2.1
+		 * 
+		 * @param    object    $wp_query WP_Query object
+		 * 
+		 * @return   object    $wp_query WP_Query object
+		 */
+		public static function filter_archives_query( $wp_query ) {
 
-			}, $echo = false );
+			if ( ! empty( $query->query_vars['suppress_filters'] ) )
+				return $wp_query;
+
+			if ( ( ! is_category() || ( is_category() && '0' == wpmoly_o( 'enable-categories' ) ) )&& ( ! is_tag() || ( is_tag() && '0' == wpmoly_o( 'enable-tags' ) ) ) )
+				return $wp_query;
+
+			$post_types = $wp_query->get( 'post_type' );
+
+			if ( '' == $post_types )
+				$post_types = array( 'post', 'movie' );
+			else if ( is_array( $post_types ) )
+				$post_types = array_merge( $post_types, array( 'post', 'movie' ) );
+			else
+				$post_types = array_merge( (array) $post_types, array( 'post', 'movie' ) );
+
+			$wp_query->set( 'post_type', $post_types );
+
+			return $wp_query;
+		}
+
+		/** * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+		 *
+		 *                            General Methods
+		 * 
+		 * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+		/**
+		 * Retrieve a specific Movie. Alias for get_post().
+		 * 
+		 * @since    2.1
+		 * 
+		 * @param    int|WP_Post    $post Optional. Post ID or post object. Defaults to global $post.
+		 * @param    string         $output Optional, default is Object. Accepts OBJECT, ARRAY_A, or ARRAY_N. Default OBJECT.
+		 * @param    string         $filter Optional. Type of filter to apply. Accepts 'raw', 'edit', 'db', or 'display'. Default 'raw'.
+		 * 
+		 * @return   WP_Post|null    WP_Post on success or null on failure.
+		 */
+		public static function get_movie( $post = null, $output = OBJECT, $filter = 'raw' ) {
+
+			return get_post( $post = null, $output = OBJECT, $filter = 'raw' );
+		}
+
+		/**
+		 * Retrieve a list of specific Movie
+		 * 
+		 * @since    2.1
+		 * 
+		 * @param    string       $movie_title Page title
+		 * @param    string       $output Optional. Output type. OBJECT, ARRAY_N, or ARRAY_A. Default OBJECT.
+		 * 
+		 * @return   WP_Post|null WP_Post on success or null on failure
+		 */
+		public static function get_movie_by_title( $movie_title, $output = OBJECT ) {
+
+			return get_page_by_title( $movie_title, $output = OBJECT, $post_type = 'movie' );
+		}
+
+		/**
+		 * Retrieve a list of Movies based on media
+		 * 
+		 * @since    2.1
+		 * 
+		 * @param    array    $args Arguments to retrieve movies
+		 * 
+		 * @return   array    Array of Post objects
+		 */
+		public static function get_movies( $args = null ) {
+
+			$defaults = array(
+				'number'      => 5,
+				'offset'      => 0,
+				'collection'  => '',
+				'genre'       => null,
+				'actor'       => null,
+				'orderby'     => 'date',
+				'order'       => 'DESC',
+				'include'     => array(),
+				'exclude'     => array(),
+				'media'       => null,
+				'status'      => null,
+				'rating'      => null,
+				'language'    => null,
+				'subtitles'   => null,
+				'format'      => null,
+				'meta'        => null,
+				'meta_value'  => null,
+				'post_status' => 'publish'
+			);
+
+			$r = wp_parse_args( $args, $defaults );
+			$meta_query = array();
+
+			if ( ! empty( $r['numberposts'] ) && empty( $r['posts_per_page'] ) )
+				$r['posts_per_page'] = $r['numberposts'];
+			if ( ! empty($r['include']) )
+				$r['post__in'] = wp_parse_id_list( $r['include'] );
+			if ( ! empty( $r['exclude'] ) )
+				$r['post__not_in'] = wp_parse_id_list( $r['exclude'] );
+
+			if ( ! is_null( $r['meta_value'] ) ) {
+
+				$meta    = array_keys( WPMOLY_Settings::get_supported_movie_meta() );
+				$details = array_keys( WPMOLY_Settings::get_supported_movie_details() );
+
+				foreach ( $details as $detail )
+					if ( ! is_null( $r[ $detail ] ) )
+						$meta_query[] = array( 'key' => "_wpmoly_movie_$detail", 'value' => $r['meta_value'], 'compare' => 'LIKE' );
+
+				if ( ! is_null( $r['meta'] ) && in_array( $r['meta'], $meta ) )
+					$meta_query[] = array( 'key' => "_wpmoly_movie_{$r['meta']}", 'value' => $r['meta_value'], 'compare' => 'LIKE' );
+			}
+
+			$r['posts_per_page'] = $r['number'];
+			$r['post_type']      = 'movie';
+			$r['meta_query']     = $meta_query;
+
+			unset( $r['media'], $r['status'], $r['rating'], $r['language'], $r['subtitle'], $r['format'], $r['meta'], $r['meta_value'], $r['number'] );
+
+			$_query = new WP_Query;
+			$movies  = $_query->query( $r );
 
 			return $movies;
 		}
 
 		/**
-		 * Filter Hook
+		 * Retrieve a list of Movies based on detail
 		 * 
-		 * Used to get a list of Movies depending on their Status
+		 * This is an alias for self::get_movies_by_meta()
 		 * 
-		 * @since    1.0
+		 * @since    2.1
 		 * 
-		 * @param    string    Status slug
+		 * @param    string    $detail Detail to search upon
+		 * @param    string    $value Detail value 
 		 * 
 		 * @return   array     Array of Post objects
 		 */
-		public static function get_movies_from_status( $status = null ) {
+		public static function get_movies_by_detail( $detail, $value ) {
 
-			$status = esc_attr( $status );
+			return self::get_movies_by_meta( $detail, $value );
+		}
 
-			// Caching
-			$name = apply_filters( 'wpmoly_cache_name', 'movie_from_status', $status );
-			$movies = WPMOLY_Cache::output( $name, function() use ( $status ) {
+		/**
+		 * Retrieve a list of Movies based on meta
+		 * 
+		 * @since    2.1
+		 * 
+		 * @param    string    $meta Meta to search upon
+		 * @param    string    $value Meta value 
+		 * 
+		 * @return   array     Array of Post objects
+		 */
+		public static function get_movies_by_meta( $meta, $value ) {
 
-				$allowed = WPMOLY_Settings::get_available_movie_status();
-				$allowed = array_keys( $allowed );
+			$args = array(
+				'meta'       => $meta,
+				'meta_value' => $value
+			);
 
-				if ( is_null( $status ) || ! in_array( $status, $allowed ) )
-					$status = WPMOLY_Settings::get_default_movie_status();
-
-				$args = array(
-					'post_type' => 'movie',
-					'post_status' => 'publish',
-					'posts_per_page' => -1,
-					'meta_query' => array(
-						array(
-							'key'   => '_wpmoly_movie_status',
-							'value' => $status
-						)
-					)
-				);
-				
-				$query = new WP_Query( $args );
-				$movies = $query->posts;
-
-				return $movies;
-
-			}, $echo = false );
-
-			return $movies;
+			return self::get_movies( $args );
 		}
 
 		/** * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -972,23 +741,41 @@ if ( ! class_exists( 'WPMOLY_Movies' ) ) :
 		 * 
 		 * @return   string    HTML content
 		 */
-		public static function get_grid_menu() {
+		public static function get_grid_menu( $args ) {
 
 			global $wpdb;
 
+			$defaults = array(
+				'order'    => wpmoly_o( 'movie-archives-movies-order', $default = true ),
+				'columns'  => wpmoly_o( 'movie-archives-grid-columns', $default = true ),
+				'number'   => wpmoly_o( 'movie-archives-movies-per-page', $default = true ),
+				'editable' => wpmoly_o( 'movie-archives-frontend-edit', $default = true )
+			);
+			$args = wp_parse_args( $args, $defaults );
+
+			// Allow URL params to override Shortcode settings
+			if ( ! empty( $_GET ) ) {
+				$vars = array(
+					'number'  => get_query_var( 'number' ),
+					'columns' => get_query_var( 'columns' ),
+					'order'   => get_query_var( 'order' )
+				);
+				$args = wp_parse_args( $vars, $args );
+			}
+			extract( $args );
+
 			$default = str_split( '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
 			$letters = array();
-			$current = get_query_var( 'letter' );
+			$letter = get_query_var( 'letter' );
 			
 			$result = $wpdb->get_results( "SELECT DISTINCT LEFT(post_title, 1) as letter FROM {$wpdb->posts} WHERE post_type='movie' AND post_status='publish' ORDER BY letter" );
 			foreach ( $result as $r )
 				$letters[] = $r->letter;
 
-			$attributes = array(
-				'letters' => $letters,
-				'default' => $default,
-				'current' => $current
-			);
+			$letter_url  = add_query_arg( compact( 'order', 'columns', 'number' ), get_permalink() );
+			$default_url = add_query_arg( compact( 'order', 'columns', 'number', 'letter' ), get_permalink() );
+
+			$attributes = compact( 'letters', 'default', 'letter', 'order', 'number', 'columns', 'letter_url', 'default_url', 'editable' );
 
 			$content = self::render_template( 'movies/grid/menu.php', $attributes );
 
@@ -1009,36 +796,69 @@ if ( ! class_exists( 'WPMOLY_Movies' ) ) :
 		 */
 		public static function get_the_grid( $args = array() ) {
 
-			$defaults = array(
-				'menu'    => true,
-				'number'  => -1,
-				'columns' => 4,
-				'title'   => false,
-				'genre'   => false,
-				'rating'  => false
-			);
-			$args = wp_parse_args( $args, $defaults );
-			extract( $args, EXTR_SKIP );
-
 			global $wpdb;
 
-			$letter = get_query_var( 'letter' );
-			$paged  = get_query_var( 'page' );
+			$defaults = array(
+				'number'   => wpmoly_o( 'movie-archives-movies-per-page', $default = true ),
+				'columns'  => wpmoly_o( 'movie-archives-grid-column', $default = true ),
+				'title'    => false,
+				'genre'    => false,
+				'rating'   => false,
+				'letter'   => '',
+				'order'    => wpmoly_o( 'movie-archives-movies-order', $default = true )
+			);
+			$args = wp_parse_args( $args, $defaults );
+
+			// Allow URL params to override Shortcode settings
+			if ( ! empty( $_GET ) ) {
+				$vars = array(
+					'number'  => get_query_var( 'number' ),
+					'columns' => get_query_var( 'columns' ),
+					'letter'  => get_query_var( 'letter' ),
+					'order'   => get_query_var( 'order' )
+				);
+				$args = wp_parse_args( $vars, $args );
+			}
+
+			extract( $args, EXTR_SKIP );
 			$total  = 0;
 
 			$movies = array();
-			$posts_per_page = $number;
 			$total  = wp_count_posts( 'movie' );
 			$total  = $total->publish;
 
+			// Limit the maximum number of terms to get
+			$limit = wpmoly_o( 'movie-archives-movies-limit', $default = true );
+			if ( -1 == $number )
+				$number = $limit;
+
+			$number = min( $number, $limit );
+			if ( ! $number )
+				$number = wpmoly_o( 'movie-archives-movies-per-page', $default = true );
+
+			// Calculate offset
+			$paged = get_query_var( '_page' );
+			$offset = 0;
+			if ( $paged )
+				$offset = max( 0, $number * ( $paged - 1 ) );
+
+			// Don't use LIMIT with weird values
+			$limit = '';
+			if ( $offset < $number )
+				$limit = sprintf( 'LIMIT %d,%d', $offset, $number );
+
 			if ( '' != $letter ) {
 
-				// like_escape deprecated since WordPress 4.0
-				$where  = ( method_exists( 'wpdb', 'esc_like' ) ? $wpdb->esc_like( $letter ) : like_escape( $letter ) ) . '%';
 				$result = $wpdb->get_results(
 					$wpdb->prepare(
-						"SELECT ID FROM {$wpdb->posts} WHERE post_type='movie' AND post_status='publish' AND post_title LIKE '%s' ORDER BY post_title ASC",
-						$where
+						"SELECT ID
+						   FROM {$wpdb->posts}
+						  WHERE post_type='movie'
+						    AND post_status='publish'
+						    AND post_title LIKE '%s'
+						  ORDER BY post_title {$order}
+						  {$limit}",
+						wpmoly_esc_like( $letter ) . '%'
 					)
 				);
 				$total = count( $result );
@@ -1049,10 +869,10 @@ if ( ! class_exists( 'WPMOLY_Movies' ) ) :
 			}
 
 			$args = array(
-				'posts_per_page' => $posts_per_page,
-				'offset'         => max( 0, ( $paged - 1 ) * $posts_per_page ),
+				'posts_per_page' => $number,
+				'offset'         => $offset,
 				'orderby'        => 'post_title',
-				'order'          => 'ASC',
+				'order'          => $order,
 				'post_type'      => 'movie',
 				'post_status'    => 'publish'
 			);
@@ -1062,16 +882,19 @@ if ( ! class_exists( 'WPMOLY_Movies' ) ) :
 
 			$movies = get_posts( $args );
 
-			$format = array();
-			if ( '' != $letter )
-				$format[] = "letter={$letter}";
-			$format[] = 'page=%#%';
+			$args = array(
+				'order'   => $order,
+				'columns' => $columns,
+				'number'  => $number,
+				'letter'  => $letter
+			);
+			$url = add_query_arg( $args, get_permalink() );
 
 			$args = array(
 				'type'    => 'list',
-				'total'   => ceil( ( $total ) / $posts_per_page ),
+				'total'   => ceil( ( $total ) / $number ),
 				'current' => max( 1, $paged ),
-				'format'  => sprintf( '%s?%s', get_permalink(), implode( '&amp;', $format ) ),
+				'format'  => $url . '&_page=%#%',
 			);
 
 			$paginate = WPMOLY_Utils::paginate_links( $args );
