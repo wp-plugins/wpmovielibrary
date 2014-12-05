@@ -55,8 +55,7 @@ if ( ! class_exists( 'WPMOLY_Edit_Movies' ) ) :
 			add_action( 'wp_insert_post_empty_content', __CLASS__ . '::filter_empty_content', 10, 2 );
 			add_action( 'wp_insert_post_data', __CLASS__ . '::filter_empty_title', 10, 2 );
 
-			add_action( 'wp_ajax_wpmoly_set_detail', __CLASS__ . '::set_detail_callback' );
-			add_action( 'wp_ajax_wpmoly_save_details', __CLASS__ . '::save_details_callback' );
+			add_action( 'wp_ajax_wpmoly_save_meta', __CLASS__ . '::save_meta_callback' );
 			add_action( 'wp_ajax_wpmoly_empty_meta', __CLASS__ . '::empty_meta_callback' );
 		}
 
@@ -79,11 +78,11 @@ if ( ! class_exists( 'WPMOLY_Edit_Movies' ) ) :
 				return false;
 
 			wp_enqueue_media();
-			wp_enqueue_script( 'media-grid' );
+			//wp_enqueue_script( 'media-grid' );
 			wp_enqueue_script( 'media' );
-			wp_localize_script( 'media-grid', '_wpMediaGridSettings', array(
+			/*wp_localize_script( 'media-grid', '_wpMediaGridSettings', array(
 				'adminUrl' => parse_url( self_admin_url(), PHP_URL_PATH ),
-			) );
+			) );*/
 
 			wp_register_script( 'select2-sortable-js', ReduxFramework::$_url . 'assets/js/vendor/select2.sortable.min.js', array( 'jquery' ), WPMOLY_VERSION, true );
 			wp_register_script( 'select2-js', ReduxFramework::$_url . 'assets/js/vendor/select2/select2.min.js', array( 'jquery', 'select2-sortable-js' ), WPMOLY_VERSION, true );
@@ -115,6 +114,26 @@ if ( ! class_exists( 'WPMOLY_Edit_Movies' ) ) :
 			$response = self::empty_movie_meta( $post_id );
 
 			wpmoly_ajax_response( $response, array(), wpmoly_create_nonce( 'empty-movie-meta' ) );
+		}
+
+		/**
+		 * Save metadata once they're collected.
+		 *
+		 * @since    2.0.3
+		 */
+		public static function save_meta_callback() {
+
+			$post_id  = ( isset( $_POST['post_id'] ) && '' != $_POST['post_id'] ? intval( $_POST['post_id'] ) : null );
+			$data     = ( isset( $_POST['data'] ) && '' != $_POST['data'] ? $_POST['data'] : null );
+
+			if ( is_null( $post_id ) )
+				return new WP_Error( 'invalid', __( 'Empty or invalid Post ID or Movie Details', 'wpmovielibrary' ) );
+
+			wpmoly_check_ajax_referer( 'save-movie-meta' );
+
+			$response = self::save_movie_meta( $post_id, $data );
+
+			wpmoly_ajax_response( $response, array(), wpmoly_create_nonce( 'save-movie-meta' ) );
 		}
 
 		/** * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -706,33 +725,14 @@ if ( ! class_exists( 'WPMOLY_Edit_Movies' ) ) :
 			if ( ! $post || 'movie' != get_post_type( $post ) )
 				return new WP_Error( 'invalid_post', __( 'Error: submitted post is not a movie.', 'wpmovielibrary' ) );
 
+			$details    = self::validate_details( $details );
 			$supported  = WPMOLY_Settings::get_supported_movie_details();
-			$_supported = array_keys( $supported );
 
 			if ( ! is_array( $details ) )
 				return new WP_Error( 'invalid_details', __( 'Error: the submitted movie details are invalid.', 'wpmovielibrary' ) );
 
-			foreach ( $details as $slug => $detail ) {
-
-				if ( in_array( $slug, $_supported ) ) {
-
-					$options = array_keys( $supported[ $slug ]['options'] );
-
-					if ( is_array( $detail ) && 1 == $supported[ $slug ]['multi'] ) {
-
-						$_d = array();
-						foreach ( $detail as $d )
-							if ( in_array( $d, $options ) )
-								$_d[] = $d;
-
-						if ( ! empty( $_d ) )
-							update_post_meta( $post_id, "_wpmoly_movie_{$slug}", $_d );
-					}
-					else if ( in_array( $detail, $options ) ) {
-						update_post_meta( $post_id, "_wpmoly_movie_{$slug}", $detail );
-					}
-				}
-			}
+			foreach ( $details as $slug => $detail )
+				update_post_meta( $post_id, "_wpmoly_movie_{$slug}", $detail );
 
 			WPMOLY_Cache::clean_transient( 'clean', $force = true );
 
@@ -755,7 +755,7 @@ if ( ! class_exists( 'WPMOLY_Edit_Movies' ) ) :
 			if ( ! $post || 'movie' != get_post_type( $post ) )
 				return new WP_Error( 'invalid_post', __( 'Error: submitted post is not a movie.', 'wpmovielibrary' ) );
 
-			$movie_meta = self::validate_meta_data( $movie_meta );
+			$movie_meta = self::validate_meta( $movie_meta );
 			unset( $movie_meta['post_id'] );
 
 			foreach ( $movie_meta as $slug => $meta )
@@ -781,7 +781,7 @@ if ( ! class_exists( 'WPMOLY_Edit_Movies' ) ) :
 		 * 
 		 * @return   array    The filtered Metadata
 		 */
-		private static function validate_meta_data( $data ) {
+		private static function validate_meta( $data ) {
 
 			if ( ! is_array( $data ) || empty( $data ) || ! isset( $data['tmdb_id'] ) )
 				return $data;
@@ -814,6 +814,52 @@ if ( ! class_exists( 'WPMOLY_Edit_Movies' ) ) :
 			);
 
 			return $_data;
+		}
+
+		/**
+		 * Filter the Movie Details submitted when saving a post to
+		 * avoid storing unexpected data to the database.
+		 * 
+		 * @since    2.1
+		 * 
+		 * @param    array    $data The Movie Details to filter
+		 * 
+		 * @return   array    The filtered Details
+		 */
+		private static function validate_details( $data ) {
+
+			if ( ! is_array( $data ) || empty( $data ) )
+				return $data;
+
+			$data = wpmoly_filter_empty_array( $data );
+
+			$supported = WPMOLY_Settings::get_supported_movie_details();
+			$movie_details = array();
+
+			foreach ( $supported as $slug => $detail ) {
+
+				if ( isset( $data[ $slug ] ) ) {
+
+					$_detail = $data[ $slug ];
+					if ( is_array( $_detail ) && 1 == $detail['multi'] ) {
+
+						$_d = array();
+						foreach ( $_detail as $d )
+							if ( in_array( $d, array_keys( $detail['options'] ) ) )
+								$_d[] = $d;
+
+						$movie_details[ $slug ] = $_d;
+					}
+					else if ( in_array( $_detail, array_keys( $detail['options'] ) ) ) {
+						$movie_details[ $slug ] = $_detail;
+					}
+				}
+				else {
+					$movie_details[ $slug ] = null;
+				}
+			}
+
+			return $movie_details;
 		}
 
 		/**

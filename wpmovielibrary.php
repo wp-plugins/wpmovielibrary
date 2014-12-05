@@ -17,7 +17,7 @@
  * Plugin Name: WPMovieLibrary
  * Plugin URI:  http://wpmovielibrary.com
  * Description: A WordPress Plugin to manage a personnal library of movies.
- * Version:     2.0.2.2
+ * Version:     2.1
  * Author:      Charlie MERLAND
  * Author URI:  http://www.caercam.org/
  * Text Domain: wpmovielibrary
@@ -34,7 +34,7 @@ if ( ! defined( 'WPINC' ) ) {
 
 define( 'WPMOLY_PLUGIN',                 plugin_basename( __FILE__ ) );
 define( 'WPMOLY_NAME',                   'WPMovieLibrary' );
-define( 'WPMOLY_VERSION',                '2.0.2.2' );
+define( 'WPMOLY_VERSION',                '2.1' );
 define( 'WPMOLY_SLUG',                   'wpmoly' );
 define( 'WPMOLY_URL',                    plugins_url( basename( __DIR__ ) ) );
 define( 'WPMOLY_PATH',                   plugin_dir_path( __FILE__ ) );
@@ -120,16 +120,19 @@ if ( wpmoly_requirements_met() ) {
 		require_once( WPMOLY_PATH . 'includes/framework/redux/ReduxCore/framework.php' );
 	if ( ! isset( $wpmoly_settings ) )
 		require_once( WPMOLY_PATH . 'includes/classes/class-wpmoly-redux.php' );
-	// require_once( WPMOLY_PATH . 'includes/framework/redux/sample/sample-config.php' );
+	//require_once( WPMOLY_PATH . 'includes/framework/redux/sample-config.php' );
 	require_once( WPMOLY_PATH . 'includes/classes/class-wpmoly-cache.php' );
 	require_once( WPMOLY_PATH . 'includes/classes/class-wpmoly-l10n.php' );
 	require_once( WPMOLY_PATH . 'includes/classes/class-wpmoly-utils.php' );
 
 	// CPT and Taxo
 	require_once( WPMOLY_PATH . 'public/class-wpmoly-movies.php' );
+	require_once( WPMOLY_PATH . 'public/class-wpmoly-headbox.php' );
+	require_once( WPMOLY_PATH . 'public/class-wpmoly-search.php' );
 	require_once( WPMOLY_PATH . 'public/class-wpmoly-collections.php' );
 	require_once( WPMOLY_PATH . 'public/class-wpmoly-genres.php' );
 	require_once( WPMOLY_PATH . 'public/class-wpmoly-actors.php' );
+	require_once( WPMOLY_PATH . 'public/class-wpmoly-archives.php' );
 
 	// Self-speaking
 	require_once( WPMOLY_PATH . 'public/class-wpmoly-shortcodes.php' );

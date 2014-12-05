@@ -8,6 +8,12 @@ wpmoly = wpmoly || {};
 		_movie_tmdb_id: $('#meta_data_tmdb_id').val(),
 		$spinner: $( '#wpmoly-tmdb .spinner' ),
 
+		autocomplete: {
+			collection: $( '#wpmoly-autocomplete-collection' ).val(),
+			genre: $( '#wpmoly-autocomplete-genre' ).val(),
+			actor: $( '#wpmoly-autocomplete-actor' ).val()
+		}
+
 	};
 
 		/**
@@ -170,7 +176,7 @@ wpmoly = wpmoly || {};
 					$( wpmoly_edit_meta.fields ).addClass('update success' ).append('<p>' + message + '</p>' ).show();
 
 				$.each( movies, function() {
-					var $movie = $( '<div class="tmdb_select_movie"><a id="tmdb_' + this.id + '" href="#" onclick="wpmoly_edit_meta.get( ' + this.id + ' ); return false;"><img src="' + this.poster + '" alt="' + this.title + '" /><em>' + this.title + '</em></a><input type=\'hidden\' value=\'' + this.json + '\' /></div>' );
+					var $movie = $( '<div class="tmdb_select_movie"><a id="tmdb_' + this.id + '" href="#" onclick="wpmoly_edit_meta.get( ' + this.id + ' ); return false;"><img src="' + this.poster + '" alt="' + this.title + '" /><em>' + this.title + '</em> (' + this.year + ')</a><input type=\'hidden\' value=\'' + this.json + '\' /></div>' );
 					$( wpmoly_edit_meta.fields ).append( $movie );
 				});
 
@@ -205,6 +211,7 @@ wpmoly = wpmoly || {};
 						$( wpmoly_edit_meta.fields ).empty().hide();
 						wpmoly_edit_meta.tmdb_id = response.data._tmdb_id;
 						wpmoly_edit_meta.set( response.data );
+						wpmoly_edit_meta.save();
 						if ( ! wpmoly_edit_meta.updating && wpmoly_edit_meta.poster_featured )
 							wpmoly_posters.set_featured( response.data.poster_path );
 					},
@@ -257,33 +264,33 @@ wpmoly = wpmoly || {};
 					$( field ).val( value );
 				});
 
-				if ( data.taxonomy.actors.length ) {
-					var limit = parseInt( $( '#wpmoly_actor_limit' ).val() ) || 0,
-					    actors = ( limit ? data.taxonomy.actors.splice( 0, limit ) : data.taxonomy.actors );
+				    if ( undefined != data.taxonomy.actors && '1' == wpmoly.editor.autocomplete.actor ) {
+					    var limit = parseInt( $( '#wpmoly_actor_limit' ).val() ) || 0,
+						actors = ( limit ? data.taxonomy.actors.splice( 0, limit ) : data.taxonomy.actors );
 
-					$.each( actors, function(i) {
-						$( '#tagsdiv-actor .tagchecklist' ).append( '<span><a id="actor-check-num-' + i + '" class="ntdelbutton">X</a>&nbsp;' + this + '</span>' );
-						tagBox.flushTags( $( '#actor.tagsdiv' ), $( '<span>' + this + '</span>' ) );
-					});
-				}
+					    $.each( actors, function(i) {
+						    $( '#tagsdiv-actor .tagchecklist' ).append( '<span><a id="actor-check-num-' + i + '" class="ntdelbutton">X</a>&nbsp;' + this + '</span>' );
+						    tagBox.flushTags( $( '#actor.tagsdiv' ), $( '<span>' + this + '</span>' ) );
+					    });
+				    }
 
-				if ( data.taxonomy.genres.length ) {
-					$.each( data.taxonomy.genres, function(i) {
-						$( '#tagsdiv-genre .tagchecklist' ).append( '<span><a id="genre-check-num-' + i + '" class="ntdelbutton">X</a>&nbsp;' + this + '</span>' );
-						tagBox.flushTags( $( '#genre.tagsdiv' ), $( '<span>' + this + '</span>' ) );
-					});
-				}
+				    if ( undefined != data.taxonomy.genres && '1' == wpmoly.editor.autocomplete.genre ) {
+					    $.each( data.taxonomy.genres, function(i) {
+						    $( '#tagsdiv-genre .tagchecklist' ).append( '<span><a id="genre-check-num-' + i + '" class="ntdelbutton">X</a>&nbsp;' + this + '</span>' );
+						    tagBox.flushTags( $( '#genre.tagsdiv' ), $( '<span>' + this + '</span>' ) );
+					    });
+				    }
 
-				if ( data.meta.director.length ) {
-					
-					$.each( data.meta.director, function( i, val ) {
-						$( '#newcollection' ).delay( 1000 ).queue( function( next ) {
-							$( this ).prop( 'value', val );
-							$( '#collection-add-submit' ).click();
-							next();
-						});
-					});
-				}
+				    if ( undefined != data.meta.director && '1' == wpmoly.editor.autocomplete.collection ) {
+					    
+					    $.each( data.meta.director, function( i, val ) {
+						    $( '#newcollection' ).delay( 1000 ).queue( function( next ) {
+							    $( this ).prop( 'value', val );
+							    $( '#collection-add-submit' ).click();
+							    next();
+						    });
+					    });
+				    }
 
 				wpmoly_meta_preview.set( data );
 
@@ -291,6 +298,49 @@ wpmoly = wpmoly || {};
 				wpmoly_state.clear();
 				wpmoly_state.set( wpmoly_lang.done, 'success' );
 			};
+
+			/**
+			 * Save metadata to the database..
+			 * 
+			 * @since    2.0.3
+			 */
+			wpmoly.editor.meta.save = function() {
+
+				var $fields = $( '#wpmoly-movie-meta .meta-data-field' ),
+				       data = {};
+
+				_.each( $fields, function( field ) {
+					var id = field.id.replace( 'meta_data_', '' ),
+					 value = $( field ).val();
+					data[ id ] = value;
+				});
+
+				wpmoly._post({
+					data: {
+						action: 'wpmoly_save_meta',
+						nonce: wpmoly.get_nonce( 'save-movie-meta' ),
+						post_id: wpmoly_edit_meta.post_id,
+						data: data,
+					},
+					beforeSend: function() {
+						wpmoly.editor.$spinner.css( { display: 'inline-block' } );
+					},
+					error: function( response ) {
+						wpmoly_state.clear();
+						$.each( response.responseJSON.errors, function() {
+							wpmoly_state.set( this, 'error' );
+						});
+					},
+					success: function( response ) {
+						wpmoly_state.clear();
+						wpmoly_state.set( wpmoly_lang.metadata_saved, 'success' );
+					},
+					complete: function( r ) {
+						wpmoly.editor.$spinner.hide();
+						wpmoly.update_nonce( 'save-movie-meta', r.responseJSON.nonce );
+					}
+				});
+			}
 
 			/**
 			 * Prefill the Movie Meta Metabox search input with the
@@ -358,6 +408,9 @@ wpmoly = wpmoly || {};
 				 * @param    string    panel slug
 				 */
 				wpmoly.editor.meta.panel.navigate = function( panel ) {
+
+					// nasty Arthemia theme fix
+					if ( undefined == $ ) $ = jQuery;
 
 					var $panels = $( '.panel' ),
 					    $panel = $( '#wpmoly-meta-' + panel + '-panel' ),

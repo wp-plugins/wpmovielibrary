@@ -145,7 +145,7 @@ var wpmoly_images, wpmoly_posters;
 						action: 'wpmoly_upload_image',
 						nonce: wpmoly.get_nonce( 'upload-movie-image' ),
 						image: image.attributes.metadata,
-						title: wpmoly_lang.image_from + ' ' + wpmoly.editor._movie_title,
+						title: wpmoly.editor._movie_title,
 						post_id: wpmoly.editor._movie_id,
 						tmdb_id: wpmoly.editor._movie_tmdb_id
 					},
@@ -386,12 +386,12 @@ var wpmoly_images, wpmoly_posters;
 					$( this ).prop( 'href', '' );
 				} );
 
-				$( '.tmdb_movie_images a.open-editor' ).on( 'click', function( e ) {
+				/*$( '.tmdb_movie_images a.open-editor' ).on( 'click', function( e ) {
 					e.preventDefault();
 
 					var id = $( this ).attr( 'data-id' );
 					wpmoly_images.editor( id );
-				} );
+				} );*/
 			}
 		};
 

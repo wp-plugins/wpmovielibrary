@@ -125,7 +125,7 @@ $wpmoly_movie_meta = array(
 		'filter_args' => null,
 		'size' => 'hidden',
 		'group' => 'meta',
-		'rewrite'  => null
+		'rewrite'  => array( 'tmdb' => __( 'tmdb', 'wpmovielibrary' ) )
 	),
 	'title' => array(
 		'title' => __( 'Title', 'wpmovielibrary' ),
@@ -134,7 +134,7 @@ $wpmoly_movie_meta = array(
 		'filter_args' => array( 'b' => array(), 'i' => array(), 'em' => array(), 'strong' => array(), 'sup' => array(), 'sub' => array() ),
 		'size' => 'half',
 		'group' => 'meta',
-		'rewrite'  => null
+		'rewrite'  => array( 'title' => __( 'title', 'wpmovielibrary' ) )
 	),
 	'original_title' => array(
 		'title' => __( 'Original Title', 'wpmovielibrary' ),
@@ -143,7 +143,7 @@ $wpmoly_movie_meta = array(
 		'filter_args' => array( 'b' => array(), 'i' => array(), 'em' => array(), 'strong' => array(), 'sup' => array(), 'sub' => array() ),
 		'size' => 'half',
 		'group' => 'meta',
-		'rewrite'  => null
+		'rewrite'  => array( 'originaltitle' => __( 'originaltitle', 'wpmovielibrary' ) )
 	),
 	'tagline' => array(
 		'title' => __( 'Tagline', 'wpmovielibrary' ),
@@ -152,7 +152,7 @@ $wpmoly_movie_meta = array(
 		'filter_args' => null,
 		'size' => 'full',
 		'group' => 'meta',
-		'rewrite'  => null
+		'rewrite'  => array( 'tagline' => __( 'tagline', 'wpmovielibrary' ) )
 	),
 	'overview' => array(
 		'title' => __( 'Overview', 'wpmovielibrary' ),
@@ -161,7 +161,7 @@ $wpmoly_movie_meta = array(
 		'filter_args' => array( 'b' => array(), 'i' => array(), 'em' => array(), 'strong' => array(), 'sup' => array(), 'sub' => array(), 'ul' => array(), 'ol' => array(), 'li' => array(), 'br' => array(), 'span' => array() ),
 		'size' => 'full',
 		'group' => 'meta',
-		'rewrite'  => null
+		'rewrite'  => array( 'overview' => __( 'overview', 'wpmovielibrary' ) )
 	),
 	'release_date' => array(
 		'title' => __( 'Release Date', 'wpmovielibrary' ),
@@ -171,6 +171,15 @@ $wpmoly_movie_meta = array(
 		'size' => 'half',
 		'group' => 'meta',
 		'rewrite'  => array( 'date' => __( 'date', 'wpmovielibrary' ) )
+	),
+	'local_release_date' => array(
+		'title' => __( 'Local Release Date', 'wpmovielibrary' ),
+		'type' => 'text',
+		'filter' => 'esc_html',
+		'filter_args' => null,
+		'size' => 'half',
+		'group' => 'meta',
+		'rewrite'  => array( 'local_date' => __( 'localdate', 'wpmovielibrary' ) )
 	),
 	'runtime' => array(
 		'title' => __( 'Runtime', 'wpmovielibrary' ),
@@ -215,7 +224,7 @@ $wpmoly_movie_meta = array(
 		'filter_args' => null,
 		'size' => 'full',
 		'group' => 'meta',
-		'rewrite'  => null
+		'rewrite'  => array( 'genres' => __( 'genres', 'wpmovielibrary' ) )
 	),
 
 	'director' => array(
@@ -304,7 +313,7 @@ $wpmoly_movie_meta = array(
 		'filter_args' => null,
 		'size' => 'half',
 		'group' => 'meta',
-		'rewrite'  => null
+		'rewrite'  => array( 'budget' => __( 'budget', 'wpmovielibrary' ) )
 	),
 	'revenue' => array(
 		'title' => __( 'Revenue', 'wpmovielibrary' ),
@@ -313,7 +322,7 @@ $wpmoly_movie_meta = array(
 		'filter_args' => null,
 		'size' => 'half',
 		'group' => 'meta',
-		'rewrite'  => null
+		'rewrite'  => array( 'revenue' => __( 'revenue', 'wpmovielibrary' ) )
 	),
 	'imdb_id' => array(
 		'title' => __( 'IMDb Id', 'wpmovielibrary' ),
@@ -322,7 +331,7 @@ $wpmoly_movie_meta = array(
 		'filter_args' => null,
 		'size' => 'half',
 		'group' => 'meta',
-		'rewrite'  => null
+		'rewrite'  => array( 'imdb' => __( 'imdb', 'wpmovielibrary' ) )
 	),
 	'adult' => array(
 		'title' => __( 'Adult', 'wpmovielibrary' ),
@@ -389,4 +398,37 @@ $wpmoly_metabox_panels = array(
 		'callback' => 'WPMOLY_Edit_Movies::render_posters_panel'
 	)
 
+);
+
+$wpmoly_tags = array(
+	'media'              => __( 'Media', 'wpmovielibrary' ),
+	'status'             => __( 'Status', 'wpmovielibrary' ),
+	'rating'             => __( 'Rating', 'wpmovielibrary' ),
+	'language'           => __( 'Language (detail)', 'wpmovielibrary' ),
+	'subtitles'          => __( 'Subtitles', 'wpmovielibrary' ),
+	'format'             => __( 'Video Format', 'wpmovielibrary' ),
+	'director'           => __( 'Director', 'wpmovielibrary' ),
+	'runtime'            => __( 'Runtime', 'wpmovielibrary' ),
+	'release_date'       => __( 'Release date', 'wpmovielibrary' ),
+	'genres'             => __( 'Genres', 'wpmovielibrary' ),
+	'overview'           => __( 'Overview', 'wpmovielibrary' ),
+	'title'              => __( 'Title', 'wpmovielibrary' ),
+	'original_title'     => __( 'Original Title', 'wpmovielibrary' ),
+	'production'         => __( 'Production', 'wpmovielibrary' ),
+	'countries'          => __( 'Country', 'wpmovielibrary' ),
+	'languages'          => __( 'Languages', 'wpmovielibrary' ),
+	'producer'           => __( 'Producer', 'wpmovielibrary' ),
+	'local_release_date' => __( 'Local release date', 'wpmovielibrary' ),
+	'photography'        => __( 'Director of Photography', 'wpmovielibrary' ),
+	'composer'           => __( 'Original Music Composer', 'wpmovielibrary' ),
+	'author'             => __( 'Author', 'wpmovielibrary' ),
+	'writer'             => __( 'Writer', 'wpmovielibrary' ),
+	'cast'               => __( 'Actors', 'wpmovielibrary' ),
+	'certification'      => __( 'Certification', 'wpmovielibrary' ),
+	'budget'             => __( 'Budget', 'wpmovielibrary' ),
+	'revenue'            => __( 'Revenue', 'wpmovielibrary' ),
+	'tagline'            => __( 'Tagline', 'wpmovielibrary' ),
+	'imdb_id'            => __( 'IMDb Id', 'wpmovielibrary' ),
+	'adult'              => __( 'Adult', 'wpmovielibrary' ),
+	'homepage'           => __( 'Homepage', 'wpmovielibrary' )
 );
