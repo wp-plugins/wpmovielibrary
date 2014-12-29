@@ -749,6 +749,22 @@ $wpmoly_config = array(
 				'default'  => 99
 			),
 
+			'movies-meta' => array(
+				'id'       => 'wpmoly-movie-archives-movies-meta',
+				'type'     => 'sorter',
+				'title'    => __( 'Grid Movies Meta', 'redux-framework-demo' ),
+				'desc'     => __( 'You can show some metadata along with posters in the grid.', 'redux-framework-demo' ),
+				'compiler' => 'true',
+				'options'  => array(
+					'used' => array(),
+					'available' => array(
+						'title'  => __( 'Title', 'wpmovielibrary' ),
+						'year'   => __( 'Year', 'wpmovielibrary' ),
+						'rating' => __( 'Rating', 'wpmovielibrary' )
+					)
+				)
+                        ),
+
 			// Movie archives page frontend edit inputs
 			'frontend-edit' => array(
 				'id'       => 'wpmoly-movie-archives-frontend-edit',

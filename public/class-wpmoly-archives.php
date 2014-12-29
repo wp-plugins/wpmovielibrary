@@ -308,6 +308,7 @@ if ( ! class_exists( 'WPMOLY_Archives' ) ) :
 				return $title;
 
 			$is_movie = ( $id == $this->pages['movie'] );
+			$translate = ( '1' == wpmoly_o( 'rewrite-enable' ) );
 			$rewrite_movie = ( '1' == wpmoly_o( 'movie-archives-title-rewrite' ) );
 			$rewrite_taxonomy = ( '1' == wpmoly_o( 'tax-archives-title-rewrite' ) );
 
@@ -361,6 +362,9 @@ if ( ! class_exists( 'WPMOLY_Archives' ) ) :
 
 				if ( '' != $meta ) {
 
+					if ( $translate )
+						$meta = WPMOLY_L10n::untranslate_rewrite( $meta );
+
 					$supported = WPMOLY_Settings::get_supported_movie_meta();
 					if ( isset( $supported[ $meta ] ) )
 						$_meta = $supported[ $meta ]['title'];
@@ -369,6 +373,9 @@ if ( ! class_exists( 'WPMOLY_Archives' ) ) :
 						$value = WPMOLY_L10n::untranslate_rewrite( $value );
 				}
 				elseif ( '' != $detail ) {
+
+					if ( $translate )
+						$detail = WPMOLY_L10n::untranslate_rewrite( $detail );
 
 					$supported = WPMOLY_Settings::get_supported_movie_detail();
 					if ( isset( $supported[ $detail ] ) )
@@ -401,12 +408,11 @@ if ( ! class_exists( 'WPMOLY_Archives' ) ) :
 
 			if ( '' != $sorting ) {
 				$sorting = self::parse_query_vars( compact( 'sorting' ) );
-				$letter  = $sorting['letter'];
 
-				if ( '' != $letter )
-					$title  .= sprintf( ' − %s ', sprintf( __( 'Letter %s', 'wpmovielibrary' ), $letter ) );
+				if ( isset( $sorting['letter'] ) && '' != $sorting['letter'] )
+					$title  .= sprintf( ' − %s ', sprintf( __( 'Letter %s', 'wpmovielibrary' ), $sorting['letter'] ) );
 
-				if ( '' != $sorting['paged'] && 'wp_title' == $filter )
+				if ( isset( $sorting['paged'] ) && '' != $sorting['paged'] && 'wp_title' == $filter )
 					$title .= sprintf( __( ' %s Page %d ', 'wpmovielibrary' ), $sep, $sorting['paged'] );
 			}
 
@@ -653,7 +659,7 @@ if ( ! class_exists( 'WPMOLY_Archives' ) ) :
 			$args = wp_parse_args( $args, $defaults );
 			extract( $args );
 
-			$default = str_split( 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
+			$default = str_split( '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ' );
 			$letters = array();
 			
 			$result = $wpdb->get_results(
@@ -721,45 +727,16 @@ if ( ! class_exists( 'WPMOLY_Archives' ) ) :
 		 */
 		public static function meta_archives( $wp_query ) {
 
-			if ( is_admin() )
+			if ( is_admin() || ! is_post_type_archive( 'movie' ) )
 				return false;
 
-			if ( isset( $wp_query->query_vars['meta'] ) ) {
-				$meta = 'meta';
-				$meta_key = $wp_query->query_vars['meta'];
-			}
-			else if ( isset( $wp_query->query_vars['detail'] ) ) {
-				$meta = 'detail';
-				$meta_key = $wp_query->query_vars['detail'];
-			}
-			else
+			$vars = self::parse_query_vars( $wp_query->query_vars );
+			extract( $vars );
+
+			if ( ! isset( $meta ) || ! isset( $value ) )
 				return false;
 
-			$l10n_rewrite = WPMOLY_L10n::get_l10n_rewrite();
-			$meta_value   = strtolower( $wp_query->query_vars['value'] );
-			$meta_value   = apply_filters( 'wpmoly_filter_rewrites', $meta_value );
-			$_key         = array_search( $meta_value, $l10n_rewrite[ $meta ] );
-
-			// If meta_key does not exist, trigger a 404 error
-			if ( ! $_key ) {
-				$wp_query->set( 'post__in', array( -1 ) );
-				return false;
-			}
-
-			// Languages and countries meta are special
-			if ( 'spoken_languages' == $meta_key && 'meta' == $meta )
-				$meta = 'languages';
-			else if ( 'production_countries' == $meta_key && 'meta' == $meta )
-				$meta = 'countries';
-
-			$value = array_search( $meta_value, $l10n_rewrite[ $meta ] );
-			if ( ! $value )
-				$value = array_search( remove_accents( rawurldecode( $meta_value ) ), $l10n_rewrite[ $meta ] );
-
-			if ( false != $value )
-				$meta_value = $value;
-
-			$meta_query = call_user_func( "WPMOLY_Search::by_{$meta_key}", $meta_value );
+			$meta_query = call_user_func( "WPMOLY_Search::by_{$meta}", $value );
 
 			$wp_query->set( 'meta_query', $meta_query );
 		}
@@ -795,22 +772,20 @@ if ( ! class_exists( 'WPMOLY_Archives' ) ) :
 		 */
 		public static function parse_query_vars( $vars ) {
 
+			$translate = ( '1' == wpmoly_o( 'rewrite-enable' ) );
 			$defaults = array(
-				'letter'  => '',
-				'paged'   => 1,
-				'columns' => wpmoly_o( 'movie-archives-grid-columns', $default = true ),
-				'rows'    => wpmoly_o( 'movie-archives-grid-rows', $default = true ),
-				'order'   => wpmoly_o( 'movie-archives-movies-order', $default = true ),
-				'meta'    => null,
-				'detail'  => null,
-				'value'   => null
+				'letter', 'paged', 'columns', 'rows', 'order', 'meta', 'detail', 'value', 'view'
 			);
-			$params = array(
-				'meta'    => get_query_var( 'meta' ),
-				'detail'  => get_query_var( 'detail' ),
-				'value'   => get_query_var( 'value' ),
-				'view'    => get_query_var( 'view', 'grid' )
-			);
+			$params = array();
+
+			foreach ( $defaults as $default ) {
+				if ( isset( $vars[ $default ] ) ) {
+					$var = $vars[ $default ];
+					if ( $translate )
+						$var = WPMOLY_L10n::untranslate_rewrite( $var );
+					$params[ $default ] = $var;
+				}
+			}
 
 			// I can haz sortingz!
 			if ( isset( $vars['sorting'] ) && '' != $vars['sorting'] ) {
@@ -848,8 +823,6 @@ if ( ! class_exists( 'WPMOLY_Archives' ) ) :
 					$params['paged'] = $matches[2];
 				}
 			}
-
-			$params = wp_parse_args( $params, $defaults );
 
 			return $params;
 		}

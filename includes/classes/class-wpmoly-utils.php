@@ -232,6 +232,12 @@ if ( ! class_exists( 'WPMOLY_Utils' ) ) :
 			WPMOLY_L10n::delete_l10n_rewrite_rules();
 			$l10n_rules = WPMOLY_L10n::set_l10n_rewrite_rules();
 
+			$meta = sprintf(
+				'(%s|%s)',
+				implode( '|', $l10n_rules['meta'] ),
+				implode( '|', $l10n_rules['detail'] )
+			);
+
 			$translate = wpmoly_o( 'rewrite-enable' );
 			$archives = array(
 				'movie'      => intval( wpmoly_o( 'movie-archives' ) ),
@@ -241,24 +247,28 @@ if ( ! class_exists( 'WPMOLY_Utils' ) ) :
 			);
 			extract( $archives );
 
-			// Links base
-			$base = 'index.php?';
-			if ( $movie )
-				$base .= 'page_id=' . $movie . '&';
-
 			// Support alternative grid views
 			$grid = '(grid|archives|list)';
 			if ( '1' == $translate )
 				$grid = sprintf( '(%s|%s|%s)', __( 'grid', 'wpmovielibrary' ), __( 'archives', 'wpmovielibrary' ), __( 'list', 'wpmovielibrary' ) );
 
-			$new_rules += self::generate_custom_meta_rules( 'meta', $l10n_rules['meta'], $l10n_rules['movies'], $base );
-			$new_rules += self::generate_custom_meta_rules( 'detail', $l10n_rules['detail'], $l10n_rules['movies'], $base );
-
 			if ( $movie ) {
-				$new_rules[ $l10n_rules['movies'] . '/?$' ] = 'index.php?page_id=' . $movie;
-				$new_rules[ $l10n_rules['movies'] . '/' . $grid . '/?$' ] = 'index.php?page_id=' . $movie . '&view=$matches[1]';
-				$new_rules[ $l10n_rules['movies'] . '/' . $grid . '/(.*?)/?$' ] = 'index.php?page_id=' . $movie . '&view=$matches[1]&sorting=$matches[2]';
+				$_movie = 'page_id=' . $movie;
+			} else {
+				$_movie = 'post_type=movie';
 			}
+
+			$new_rules[ $l10n_rules['movies'] . '/?$' ] = 'index.php?' . $_movie;
+			$new_rules[ $l10n_rules['movies'] . '/' . $grid . '/?$' ] = 'index.php?' . $_movie . '&view=$matches[1]';
+			$new_rules[ $l10n_rules['movies'] . '/' . $grid . '/(.*?)/?$' ] = 'index.php?' . $_movie . '&view=$matches[1]&sorting=$matches[2]';
+			$new_rules[ $l10n_rules['movies'] . '/' . $meta . '/([^/]+)/?$' ] = 'index.php?' . $_movie . '&meta=$matches[1]&value=$matches[2]';
+			$new_rules[ $l10n_rules['movies'] . '/' . $meta . '/([^/]+)/' . $grid . '/?$' ] = 'index.php?' . $movie . '&meta=$matches[1]&value=$matches[2]&view=$matches[3]';
+			$new_rules[ $l10n_rules['movies'] . '/' . $meta . '/([^/]+)/' . $grid . '/(.*?)/?$' ] = 'index.php?' . $_movie . '&meta=$matches[1]&value=$matches[2]&view=$matches[3]&sorting=$matches[4]';
+			$new_rules[ $l10n_rules['movies'] . '/page/([0-9]+)/?$' ] = 'index.php?' . $_movie . '&paged=$matches[1]';
+			$new_rules[ $l10n_rules['movies'] . '/([^/]+)/([^/]+)/?$' ] = 'index.php?' . $_movie . '&meta=$matches[1]&value=$matches[2]';
+			$new_rules[ $l10n_rules['movies'] . '/([^/]+)/([^/]+)/page/([0-9]+)/?$' ] = 'index.php?' . $_movie . '&meta=$matches[1]&value=$matches[2]&paged=$matches[3]';
+			$new_rules[ $l10n_rules['movies'] . '/([^/]+)/([^/]+)/' . $grid . '/?$' ] = 'index.php?' . $_movie . '&meta=$matches[1]&value=$matches[2]&view=$matches[3]';
+			$new_rules[ $l10n_rules['movies'] . '/([^/]+)/([^/]+)/' . $grid . '/(.*?)/?$' ] = 'index.php?' . $_movie . '&meta=$matches[1]&value=$matches[2]&view=$matches[3]&sorting=$matches[4]';
 
 			if ( $collection && get_post( $collection ) ) {
 				$title = get_post( $collection )->post_name;
@@ -290,52 +300,18 @@ if ( ! class_exists( 'WPMOLY_Utils' ) ) :
 				$rules[ $title . '/' . $grid . '/(.*?)/?$' ] = 'index.php?page_id=' . $actor . '&view=$matches[1]&sorting=$matches[2]';
 			}
 
-			$rules[ '([^/]+)/' . $grid . '/(.*?)/?$' ] = 'index.php?name=$matches[1]&view=$matches[2]&sorting=$matches[3]';
+			$rules[ '([^/]+)/' . $grid . '/?$' ] = 'index.php?pagename=$matches[1]&view=$matches[2]';
+			$rules[ '([^/]+)/' . $grid . '/(.*?)/?$' ] = 'index.php?pagename=$matches[1]&view=$matches[2]&sorting=$matches[3]';
+			$rules[ '([^/]+)/' . $meta . '/([^/]+)/?$' ] = 'index.php?pagename=$matches[1]&meta=$matches[2]&value=$matches[3]';
+			$rules[ '([^/]+)/' . $meta . '/([^/]+)/' . $grid . '/?$' ] = 'index.php?pagename=$matches[1]&meta=$matches[2]&value=$matches[3]&view=$matches[4]';
+			$rules[ '([^/]+)/' . $meta . '/([^/]+)/' . $grid . '/(.*?)/?$' ] = 'index.php?pagename=$matches[1]&meta=$matches[2]&value=$matches[3]&view=$matches[4]&sorting=$matches[5]';
+			$rules[ '([^/]+)/([^/]+)/([^/]+)/?$' ] = 'index.php?pagename=$matches[1]&meta=$matches[2]&value=$matches[3]';
+			$rules[ '([^/]+)/([^/]+)/([^/]+)/' . $grid . '/?$' ] = 'index.php?pagename=$matches[1]&meta=$matches[2]&value=$matches[3]&view=$matches[4]';
+			$rules[ '([^/]+)/([^/]+)/([^/]+)/' . $grid . '/(.*?)/?$' ] = 'index.php?pagename=$matches[1]&meta=$matches[2]&value=$matches[3]&view=$matches[4]&sorting=$matches[5]';
 
 			$new_rules = $new_rules + $rules;
 
 			WPMOLY_L10n::set_l10n_rewrite();
-
-			return $new_rules;
-		}
-
-		/**
-		 * Generate custom rewrite rules for movie metadata and details.
-		 * 
-		 * This generates a long list of regex that will be usefull to list
-		 * movies by their meta and details.
-		 * 
-		 * @since    1.0
-		 * 
-		 * @param    string    $notice The notice message
-		 * @param    string    $type Notice type: update, error, wpmoly?
-		 * @param    string    $movies 'movies' permalink translation or original
-		 * @param    string    $base links base, general index or custom page
-		 * 
-		 * @return   array     $new_rules Set of rewrite rules to merge to current rules
-		 */
-		private static function generate_custom_meta_rules( $type, $data, $movies, $base ) {
-
-			$new_rules = array();
-
-			$grid = '(grid|archives|list)';
-			if ( '1' == wpmoly_o( 'rewrite-enable' ) )
-				$grid = sprintf( '(%s|%s|%s)', __( 'grid', 'wpmovielibrary' ), __( 'archives', 'wpmovielibrary' ), __( 'list', 'wpmovielibrary' ) );
-
-			foreach ( $data as $slug => $meta ) {
-
-				$meta = apply_filters( 'wpmoly_filter_rewrites', $meta );
-
-				// Simple meta link
-				$regex = sprintf( '%s/(%s)/([^/]+)(/%s)?/?$', $movies, $meta, $grid );
-				$value = sprintf( '%s%s=%s&value=$matches[2]', $base, $type, $slug );
-				$new_rules[ $regex ] = $value;
-
-				// Simple meta link
-				$regex = sprintf( '%s/(%s)/([^/]+)/%s/(.*?)/?$', $movies, $meta, $grid );
-				$value = sprintf( '%s%s=%s&value=$matches[2]&view=$matches[3]&sorting=$matches[4]', $base, $type, $slug );
-				$new_rules[ $regex ] = $value;
-			}
 
 			return $new_rules;
 		}
@@ -521,7 +497,7 @@ if ( ! class_exists( 'WPMOLY_Utils' ) ) :
 		public static function add_meta_link( $key, $value, $type, $text = null ) {
 
 			if ( ! wpmoly_o( 'meta-links' ) || 'nowhere' == wpmoly_o( 'meta-links' ) || ( 'posts_only' == wpmoly_o( 'meta-links' ) && ! is_single() ) )
-				return $value;
+				return $text;
 
 			if ( is_null( $key ) || is_null( $value ) || '' == $value )
 				return $value;
