@@ -12,12 +12,12 @@ if ( ! empty( $movies ) ) :
 			$size = 'large';
 ?>
 					<div id="wpmoly-movie-<?php the_ID(); ?>" <?php post_class( 'wpmoly movie' ) ?>>
-						<a class="wpmoly grid movie link" href="<?php the_permalink(); ?>">
+						<a class="wpmoly grid movie link" title="<?php the_title(); ?>" href="<?php the_permalink(); ?>">
 							<?php if ( has_post_thumbnail() ) the_post_thumbnail( $size, array( 'class' => 'wpmoly grid movie poster' ) ); ?>
 <?php 	if ( $title ) : ?>
 							<h4 class="wpmoly grid movie title"><?php the_title(); ?></h4>
 <?php 	endif; if ( $year ) : ?>
-							<span class="wpmoly grid movie genres"><?php echo apply_filters( 'wpmoly_format_movie_release_date', wpmoly_get_movie_meta( get_the_ID(), 'release_date' ), 'Y' ); ?></span>
+							<span class="wpmoly grid movie year"><?php echo apply_filters( 'wpmoly_format_movie_release_date', wpmoly_get_movie_meta( get_the_ID(), 'release_date' ), 'Y' ); ?></span>
 <?php 	endif; if ( $rating ) : ?>
 							<span class="wpmoly grid movie rating"><?php echo apply_filters( 'wpmoly_movie_rating_stars', wpmoly_get_movie_rating( get_the_ID() ) ); ?></span>
 <?php 	endif; ?>
