@@ -121,7 +121,7 @@ class WPMOLY_Details_Widget extends WPMOLY_Widget {
 
 		if ( ! empty( $details ) ) {
 
-			$baseurl = get_post_type_archive_link( 'movie' );
+			$baseurl = trailingslashit( get_post_type_archive_link( 'movie' ) );
 
 			$this->widget_css .= " wpmoly {$detail}";
 
@@ -139,7 +139,7 @@ class WPMOLY_Details_Widget extends WPMOLY_Widget {
 							'value'   => $slug,
 							'type'    => 'detail',
 							'format'  => 'raw',
-							'baseurl' => get_post_type_archive_link( 'movie' )
+							'baseurl' => $baseurl
 						)
 					)
 				);
@@ -149,7 +149,7 @@ class WPMOLY_Details_Widget extends WPMOLY_Widget {
 				else if ( 'rating' == $detail && $list )
 					$item['title'] = esc_attr__( $_title, 'wpmovielibrary' ) . ' (' . $slug . '&#9733;)';
 				else
-					$item['title'] = '<div class="movie-rating-display">' . apply_filters( 'wpmoly_movie_rating_stars', $slug ) . '<span class="rating-label">' . esc_attr__( $_title, 'wpmovielibrary' ) . '</span></div>';
+					$item['title'] = '<div class="movie-rating-display">' . apply_filters( 'wpmoly_movie_rating_stars', $slug, null, null, true ) . '<span class="rating-label">' . esc_attr__( $_title, 'wpmovielibrary' ) . '</span></div>';
 
 				$items[] = $item;
 			}

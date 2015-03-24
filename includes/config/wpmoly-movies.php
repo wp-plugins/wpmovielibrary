@@ -94,8 +94,8 @@ $wpmoly_movie_details = array(
 		'title'    => __( 'Movie Subtitles', 'wpmovielibrary' ),
 		'desc'     => __( 'Select a subtitle for this movie', 'wpmovielibrary' ),
 		'icon'     => 'wpmolicon icon-subtitles',
-		'options'  => $wpmoly_supported_languages,
-		'default'  => '',
+		'options'  => array_merge( array( 'none' => __( 'None', 'wpmovielibrary' ) ), $wpmoly_supported_languages ),
+		'default'  => 'none',
 		'multi'    => true,
 		'rewrite'  => array( 'subtitles' => __( 'subtitles', 'wpmovielibrary' ) )
 	),
@@ -364,40 +364,6 @@ $wpmoly_movie_meta_aliases = array(
 	'resume'     => 'overview',
 	'date'       => 'release_date',
 	'musician'   => 'composer'
-);
-
-$wpmoly_metabox_panels = array(
-
-	'preview' => array(
-		'title'    => __( 'Preview', 'wpmovielibrary' ),
-		'icon'     => 'wpmolicon icon-video',
-		'callback' => 'WPMOLY_Edit_Movies::render_preview_panel'
-	),
-
-	'meta' => array(
-		'title'    => __( 'Metadata', 'wpmovielibrary' ),
-		'icon'     => 'wpmolicon icon-meta',
-		'callback' => 'WPMOLY_Edit_Movies::render_meta_panel'
-	),
-
-	'details' => array(
-		'title'    => __( 'Details', 'wpmovielibrary' ),
-		'icon'     => 'wpmolicon icon-details',
-		'callback' => 'WPMOLY_Edit_Movies::render_details_panel'
-	),
-
-	'images' => array(
-		'title'    => __( 'Images', 'wpmovielibrary' ),
-		'icon'     => 'wpmolicon icon-images-alt',
-		'callback' => 'WPMOLY_Edit_Movies::render_images_panel'
-	),
-
-	'posters' => array(
-		'title'    => __( 'Posters', 'wpmovielibrary' ),
-		'icon'     => 'wpmolicon icon-poster',
-		'callback' => 'WPMOLY_Edit_Movies::render_posters_panel'
-	)
-
 );
 
 $wpmoly_tags = array(

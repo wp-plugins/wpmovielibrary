@@ -260,18 +260,36 @@ if ( ! class_exists( 'WPMOLY_Archives' ) ) :
 			if ( ! in_array( $id, $this->pages ) )
 				return $content;
 
+			// Fetch archives
 			extract( $this->pages );
 			$archive = '';
-			if ( $movie && $movie == $id )
+			if ( $movie && $movie == $id ) {
 				$archive = self::movie_archives();
-			elseif ( $collection && $collection == $id )
+			} else if ( $collection && $collection == $id ) {
 				$archive = self::taxonomy_archives( 'collection' );
-			elseif ( $genre && $genre == $id )
+			} else if ( $genre && $genre == $id ) {
 				$archive = self::taxonomy_archives( 'genre' );
-			elseif ( $actor && $actor == $id )
+			} else if ( $actor && $actor == $id ) {
 				$archive = self::taxonomy_archives( 'actor' );
+			}
 
-			return $archive . $content;
+			// Determine archives position
+			if ( $movie && $archive ) {
+				$position = wpmoly_o( 'movie-archives-position' );
+			} else if ( ( $collection || $genre || $actor ) && $archive ) {
+				$position = wpmoly_o( 'tax-archives-position' );
+			} else {
+				$position = 'top';
+			}
+
+			// Positioning
+			if ( 'bottom' == $position ) {
+				$content = $content . $archive;
+			} else {
+				$content = $archive . $content;
+			}
+
+			return $content;
 		}
 
 		/** * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -301,7 +319,6 @@ if ( ! class_exists( 'WPMOLY_Archives' ) ) :
 			$filter = current_filter();
 			$sep = '&nbsp;|&nbsp;';
 			if ( 'wp_title' == $filter ) {
-				$sep = $id;
 				$id  = get_the_ID();
 			}
 
@@ -431,7 +448,7 @@ if ( ! class_exists( 'WPMOLY_Archives' ) ) :
 			$title = apply_filters( "wpmoly_filter_{$page}_archive_page_title", $title, $id );
 
 			if ( 'wp_title' == $filter ) {
-				$title = str_replace( array( ':', '−' ), $sep, $title ) . $sep;
+				$title = str_replace( array( ' : ', ' − ' ), $sep, $title ) . $sep;
 				/**
 				 * Filter Page's main title as used in wp_title()
 				 * 
@@ -469,11 +486,11 @@ if ( ! class_exists( 'WPMOLY_Archives' ) ) :
 
 			$grid_menu = '';
 			if ( $has_menu ) {
-				$args = compact( 'columns', 'rows', 'number', 'order', 'editable', 'letter', 'view' );
+				$args = compact( 'columns', 'rows', 'number', 'order', 'orderby', 'editable', 'letter', 'view' );
 				$grid_menu = WPMOLY_Grid::get_menu( $args );
 			}
 
-			$args    = compact( 'number', 'paged', 'order', 'columns', 'rows', 'letter', 'meta', 'detail', 'value', 'view' );
+			$args    = compact( 'number', 'paged', 'order', 'orderby', 'columns', 'rows', 'letter', 'meta', 'detail', 'value', 'view' );
 			$grid    = WPMOLY_Grid::get_content( $args );
 			$content = $grid_menu . $grid;
 
@@ -609,7 +626,7 @@ if ( ! class_exists( 'WPMOLY_Archives' ) ) :
 				global $wp_rewrite;
 				$format = '/page/%#%';
 				if ( '' == $wp_rewrite->permalink_structure )
-					$format = '&_page=%#%';
+					$format = '&paged=%#%';
 
 				// ... and the pagination menu.
 				$args = array(
@@ -821,7 +838,7 @@ if ( ! class_exists( 'WPMOLY_Archives' ) ) :
 			foreach ( $defaults as $default ) {
 				if ( isset( $vars[ $default ] ) ) {
 					$var = $vars[ $default ];
-					if ( $translate )
+					if ( $translate || in_array( $default, array( 'meta', 'detail' ) ) )
 						$var = WPMOLY_L10n::untranslate_rewrite( $var );
 					$params[ $default ] = $var;
 				}
@@ -832,10 +849,11 @@ if ( ! class_exists( 'WPMOLY_Archives' ) ) :
 
 				$sorting = '/' . $vars['sorting'];
 				$regex = array(
-					'letter' => '(\/([0-9A-Za-z]{1}))\/',
-					'number' => '(([0-9]{1,})\:([0-9]{1,})|([0-9]{1,}))\/?',
-					'order'  => '(asc|desc|ASC|DESC)\/?',
-					'paged'  => '(page\/([0-9]{1,}))\/?'
+					'letter'  => '(\/([0-9A-Za-z]{1}))\/',
+					'number'  => '(([0-9]{1,})\:([0-9]{1,})|([0-9]{1,}))\/?',
+					'order'   => '(asc|desc|ASC|DESC)\/?',
+					'orderby' => '(title|year|date|localdate|rating)\/?',
+					'paged'   => '(page\/([0-9]{1,}))\/?'
 				);
 
 				// Has letter?
@@ -855,6 +873,11 @@ if ( ! class_exists( 'WPMOLY_Archives' ) ) :
 				$preg = preg_match( "/{$regex['order']}/", $sorting, $matches );
 				if ( $preg && isset( $matches[1] ) && '' != $matches[1] ) {
 					$params['order'] = strtoupper( $matches[1] );
+				}
+
+				$preg = preg_match( "/{$regex['orderby']}/", $sorting, $matches );
+				if ( $preg && isset( $matches[1] ) && '' != $matches[1] ) {
+					$params['orderby'] = $matches[1];
 				}
 
 				// Has pagination?
@@ -880,7 +903,7 @@ if ( ! class_exists( 'WPMOLY_Archives' ) ) :
 
 			$defaults = array(
 				'letter'  => '',
-				'paged'   => 1,
+				'paged'   => '1',
 				'number'  => wpmoly_o( "tax-archives-terms-per-page", $default = true ),
 				'order'   => wpmoly_o( "tax-archives-terms-order", $default = true ),
 				'orderby' => wpmoly_o( "tax-archives-terms-orderby", $default = true ),
@@ -928,9 +951,12 @@ if ( ! class_exists( 'WPMOLY_Archives' ) ) :
 				if ( $preg ) {
 					$params['paged'] = $matches[2];
 				}
-			}
 
-			$params = wp_parse_args( $params, $defaults );
+				$params = wp_parse_args( $params, $defaults );
+
+			} else {
+				$params = wp_parse_args( $vars, $defaults );
+			}
 
 			return $params;
 		}

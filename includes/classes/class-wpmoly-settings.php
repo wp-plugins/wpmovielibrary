@@ -107,11 +107,15 @@ if ( ! class_exists( 'WPMOLY_Settings' ) ) :
 			 */
 			$details = apply_filters( 'wpmoly_pre_filter_details', $wpmoly_movie_details );
 
-			if ( ! is_null( $detail ) && isset( $details[ "movie_{$detail}" ] ) )
+			if ( ! is_null( $detail ) && isset( $details[ "movie_{$detail}" ] ) ) {
 				$details = apply_filters( "wpmoly_filter_detail_{$detail}", $details[ "movie_{$detail}" ]['options'] );
-			else
-				foreach ( $details as $_detail => $data )
-					$details[ $_detail ]['options'] = apply_filters( "wpmoly_filter_detail_{$_detail}", $details[ $_detail ]['options'] );
+			} else {
+				foreach ( $details as $slug => $data ) {
+					if ( 'select' == $data['type'] && ! empty( $data['options'] ) ) {
+						$details[ $slug ]['options'] = apply_filters( "wpmoly_filter_detail_{$slug}", $data['options'] );
+					}
+				}
+			}
 
 			/**
 			 * Filter the Details list to add/remove details.
@@ -125,7 +129,6 @@ if ( ! class_exists( 'WPMOLY_Settings' ) ) :
 			 */
 			$_details = apply_filters( 'wpmoly_filter_details', $details );
 
-			
 			if ( ! is_null( $detail ) )
 				return $details[ $detail ]['options'];
 
@@ -251,32 +254,6 @@ if ( ! class_exists( 'WPMOLY_Settings' ) ) :
 			$wpmoly_countries = apply_filters( 'wpmoly_filter_countries', $wpmoly_countries );
 
 			return $wpmoly_countries;
-		}
-
-		/**
-		 * Return Panels data
-		 *
-		 * @since    2.0
-		 *
-		 * @return   array    WPMOLY Panels
-		 */
-		public static function get_metabox_panels() {
-
-			global $wpmoly_metabox_panels;
-
-			/**
-			 * Filter the Metabox Panels to add/remove tabs.
-			 *
-			 * This should be used through Plugins to create additionnal
-			 * Metabox panels.
-			 *
-			 * @since    2.0
-			 *
-			 * @param    array    $wpmoly_metabox_panels Existing Panels
-			 */
-			$wpmoly_metabox_panels = apply_filters( 'wpmoly_filter_metabox_panels', $wpmoly_metabox_panels );
-
-			return $wpmoly_metabox_panels;
 		}
 
 		/**
