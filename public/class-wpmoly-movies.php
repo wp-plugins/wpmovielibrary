@@ -243,13 +243,14 @@ if ( ! class_exists( 'WPMOLY_Movies' ) ) :
 		 *
 		 * @return   string      The filtered content containing original content plus movie infos if available, the untouched original content else.
 		 */
-		public static function movie_content( $content ) {
+		public static function movie_content( $content = null ) {
 
 			if ( 'movie' != get_post_type() )
 				return $content;
 
-			if ( ! wpmoly_o( 'vintage-content' ) ) {
-				$headbox = WPMOLY_Headbox::get_content( $content );
+			if ( wpmoly_o( 'headbox-enable' ) ) {
+				$headbox = new WPMOLY_Headbox();
+				$headbox = $headbox->render( $content );
 			} else {
 				$headbox = self::movie_vintage_content( $content );
 			}
@@ -563,7 +564,7 @@ if ( ! class_exists( 'WPMOLY_Movies' ) ) :
 		 */
 		public static function get_movie( $post = null, $output = OBJECT, $filter = 'raw' ) {
 
-			return get_post( $post = null, $output = OBJECT, $filter = 'raw' );
+			return get_post( $post, $output, $filter );
 		}
 
 		/**
@@ -578,7 +579,7 @@ if ( ! class_exists( 'WPMOLY_Movies' ) ) :
 		 */
 		public static function get_movie_by_title( $movie_title, $output = OBJECT ) {
 
-			return get_page_by_title( $movie_title, $output = OBJECT, $post_type = 'movie' );
+			return get_page_by_title( $movie_title, $output, $post_type = 'movie' );
 		}
 
 		/**

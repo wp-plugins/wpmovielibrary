@@ -1,3 +1,11 @@
+<?php if ( ! is_null( $debug ) ) : ?>
+				<div>
+					<strong>$main_args:</strong><br />
+					<pre><?php print_r( $debug['main_args'] ); ?></pre>
+					<strong>$permalinks_args:</strong><br />
+					<pre><?php print_r( $debug['permalinks_args'] ); ?></pre>
+				</div>
+<?php endif; ?>
 
 				<div id="wpmoly-movie-grid" class="wpmoly movies grid grid-col-<?php echo $columns . $theme; ?><?php if ( $title || $year || $rating ) echo ' spaced'; ?>">
 
@@ -10,8 +18,16 @@ if ( ! empty( $movies ) ) :
 		$size = 'medium';
 		if ( 1 == $columns )
 			$size = 'large';
+
+		$class = 'wpmoly movie';
+		if ( $title )
+			$class .= ' with-title';
+		if ( $year )
+			$class .= ' with-year';
+		if ( $rating )
+			$class .= ' with-rating';
 ?>
-					<div id="wpmoly-movie-<?php the_ID(); ?>" <?php post_class( 'wpmoly movie' ) ?>>
+					<div id="wpmoly-movie-<?php the_ID(); ?>" <?php post_class( $class ) ?>>
 						<a class="wpmoly grid movie link" title="<?php the_title(); ?>" href="<?php the_permalink(); ?>">
 							<?php if ( has_post_thumbnail() ) the_post_thumbnail( $size, array( 'class' => 'wpmoly grid movie poster' ) ); ?>
 <?php 	if ( $title ) : ?>
